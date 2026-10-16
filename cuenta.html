@@ -10,13 +10,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css">
+<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css">
 </head>
 <body data-page="cuenta">
 <div id="site-header"></div>
 <main class="wrap">
   <div class="two-col" style="padding-top:36px">
-    <section style="background:#F5F5F5;padding:28px 20px">
+    <section style="background:var(--gris-claro);padding:28px 20px">
       <h1 style="font-size:26px;margin-bottom:18px">Ingresa a tu cuenta</h1>
       <div class="seg"><button aria-pressed="true" data-mode="ingreso">Iniciar sesión</button><button aria-pressed="false" data-mode="registro">Crear cuenta</button></div>
       <form id="auth-form" class="fields">
@@ -36,7 +36,7 @@
         <div class="order-top"><strong>#LV-[NÚMERO]</strong><span class="tag dark">En camino</span></div>
         <div class="note">[Fecha] · 2 productos · $ [TOTAL]</div>
         <ol class="track"><li class="done">Confirmado</li><li class="done">Preparando</li><li class="now">En camino</li><li>Entregado</li></ol>
-        <div style="margin-top:16px;padding:14px;background:#F5F5F5;font-size:12px;line-height:1.6">Guía Inter Rapidísimo: <strong>[N.º DE GUÍA]</strong><br>Entrega estimada: [FECHA]</div>
+        <div style="margin-top:16px;padding:14px;background:var(--gris-claro);font-size:12px;line-height:1.6">Guía Inter Rapidísimo: <strong>[N.º DE GUÍA]</strong><br>Entrega estimada: [FECHA]</div>
         <a class="btn btn-outline btn-block" href="https://interrapidisimo.com" target="_blank" rel="noopener" style="margin-top:12px;min-height:48px">Rastrear envío</a>
       </article>
       <article class="order"><div class="order-top"><div><strong>#LV-[NÚMERO]</strong><div class="note">[Fecha] · 1 producto</div></div><span class="tag line">Entregado</span></div></article>

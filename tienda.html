@@ -11,13 +11,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css">
+<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css">
 </head>
 <body data-page="tienda">
 <div id="site-header"></div>
 
 <main class="wrap">
-  <nav class="crumbs" aria-label="Ruta"><a href="index.html">Inicio</a> / Tienda / <span id="crumb-current" style="color:#111">Todos</span></nav>
+  <nav class="crumbs" aria-label="Ruta"><a href="index.html">Inicio</a> / Tienda / <span id="crumb-current" style="color:var(--ink)">Todos</span></nav>
   <div class="shop-head">
     <label class="sr-only" for="buscar">Buscar productos</label>
     <input class="search" id="buscar" type="search" placeholder="Buscar gorras, gafas, relojes…">
@@ -41,7 +41,7 @@
   <div class="shop-layout">
     <aside class="filters" id="filters" aria-label="Filtros">
       <fieldset><legend>PRECIO</legend>
-        <label for="f-precio" style="font-size:13px;color:#3A3A3A">Hasta $ [MÁXIMO]</label>
+        <label for="f-precio" style="font-size:13px;color:var(--grafito)">Hasta $ [MÁXIMO]</label>
         <input id="f-precio" type="range" min="0" max="100" value="100">
       </fieldset>
       <fieldset><legend>DISPONIBILIDAD</legend>

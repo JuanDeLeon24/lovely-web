@@ -15,6 +15,8 @@
     bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
     wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20l1.3-4A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5"/></svg>',
     lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+    moon: '<svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+    sun: '<svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
     back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>'
   };
   var icon = function (name, tone) { return 'assets/icons/' + name + '-' + (tone || 'gris') + '.svg'; };
@@ -66,12 +68,22 @@
         '<button class="icon-btn menu-btn" aria-label="Abrir menú" aria-expanded="false">' + I.menu + '</button>' +
         '<a class="logo" href="index.html" aria-label="Lovely, ir al inicio"><img src="assets/img/logo-negro.svg" alt="LV Accesorios" width="292" height="71"></a>' +
         '<nav class="nav" aria-label="Principal">' + navLinks() + '</nav>' +
-        '<div class="h-actions"><a class="icon-btn" href="tienda.html#buscar" aria-label="Buscar">' + I.search + '</a>' +
+        '<div class="h-actions"><button class="icon-btn theme-btn" type="button">' + I.moon + I.sun + '</button>' +
+        '<a class="icon-btn" href="tienda.html#buscar" aria-label="Buscar">' + I.search + '</a>' +
         '<a class="icon-btn" href="cuenta.html" aria-label="Mi cuenta">' + I.user + '</a>' +
         '<a class="icon-btn" href="checkout.html" aria-label="Carrito">' + I.bag + '<span class="cart-count" data-n="0">0</span></a></div>' +
         '</div></header>' +
         '<div class="menu-panel" role="dialog" aria-label="Menú"><button class="icon-btn close" aria-label="Cerrar menú">' + I.close + '</button>' +
         navLinks() + '<a href="nosotros.html">Quiénes somos</a><a href="ayuda.html">Ayuda</a><a href="cuenta.html">Mi cuenta</a></div>';
+      var tb = $('.theme-btn');
+      var syncTheme = function () { var d = document.documentElement.getAttribute('data-theme') === 'dark'; tb.setAttribute('aria-pressed', d ? 'true' : 'false'); tb.setAttribute('aria-label', d ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'); tb.title = tb.getAttribute('aria-label'); };
+      tb.addEventListener('click', function () {
+        var d = document.documentElement.getAttribute('data-theme') !== 'dark';
+        document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
+        try { localStorage.setItem('lv_theme', d ? 'dark' : 'light'); } catch (e) {}
+        syncTheme();
+      });
+      syncTheme();
       var panel = $('.menu-panel'), mb = $('.menu-btn');
       mb.addEventListener('click', function () { panel.classList.add('open'); mb.setAttribute('aria-expanded', 'true'); });
       $('.menu-panel .close').addEventListener('click', function () { panel.classList.remove('open'); mb.setAttribute('aria-expanded', 'false'); });

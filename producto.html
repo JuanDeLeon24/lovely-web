@@ -11,14 +11,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css">
+<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css">
 </head>
 <body data-page="producto" class="has-sticky">
 <div id="site-header"></div>
 
 <main>
 <div class="wrap">
-  <nav class="crumbs" aria-label="Ruta"><a href="index.html">Inicio</a> / <a id="p-cat" href="tienda.html">Categoría</a> / <span id="p-crumb" style="color:#111"></span></nav>
+  <nav class="crumbs" aria-label="Ruta"><a href="index.html">Inicio</a> / <a id="p-cat" href="tienda.html">Categoría</a> / <span id="p-crumb" style="color:var(--ink)"></span></nav>
   <section class="pd" style="padding-top:16px">
     <div class="gallery">
       <div class="thumbs" id="thumbs"></div>
@@ -36,7 +36,7 @@
       <div class="pd-price" id="p-price">$ [PRECIO] <small>COP · IVA incluido</small></div>
       <p class="pd-desc" id="p-desc"></p>
       <div><div style="font-size:13px;margin-bottom:10px"><strong>Color:</strong> <span id="p-color"></span></div><div class="swatches" id="swatches"></div></div>
-      <div class="stock" id="p-stock" style="font-size:13px;color:#3A3A3A;display:flex;gap:8px;align-items:center"></div>
+      <div class="stock" id="p-stock" style="font-size:13px;color:var(--grafito);display:flex;gap:8px;align-items:center"></div>
       <div class="buy-row">
         <div class="qty"><button id="qty-minus" aria-label="Quitar una unidad">−</button><output id="qty" aria-live="polite">1</output><button id="qty-plus" aria-label="Agregar una unidad">+</button></div>
         <button class="btn btn-dark js-add">Agregar al carrito</button>

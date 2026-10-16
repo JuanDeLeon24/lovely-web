@@ -148,6 +148,11 @@ function azurageMap() {
 /* ---------- Materiales PBR ---------- */
 const REAL = { '#D4AF37': '#E7C36E', '#C48A72': '#E2AE95', '#C9CCD1': '#C8CBCF', '#BFC3C8': '#C2C5C9', '#E9E9E9': '#DADDE0' };
 function metal(hex, finish) {
+  if (finish === 'titanium' || finish === 'titanium-polished') {
+    const t = new THREE.MeshPhysicalMaterial({ color: '#8E9196', metalness: 1, roughness: finish === 'titanium' ? 0.38 : 0.18 });
+    if (finish === 'titanium') { t.roughnessMap = brushedMap(); t.anisotropy = 0.6; }
+    return t;
+  }
   const col = REAL[hex] || hex, dark = hexLum(hex) < 0.3, brushed = finish === 'brushed';
   const m = new THREE.MeshPhysicalMaterial({ color: col, metalness: 1, roughness: brushed ? 0.42 : (dark ? 0.24 : 0.12) });
   if (brushed) { m.roughnessMap = brushedMap(); m.anisotropy = 0.8; }
@@ -282,7 +287,7 @@ function handShape(type, len, w) {
 }
 
 /* ---------- Impresiones (esfera y bisel) ---------- */
-function dialPrint(s, c, Rd) {
+function dialPrint(s, c, Rd, brand) {
   const S = 2048, k = S / 2 / Rd, dark = hexLum(c[1]) < 0.5, ink = dark ? 'rgba(238,238,238,.92)' : 'rgba(30,30,30,.9)';
   return tex(canvas(S, S, (x) => {
     x.translate(S / 2, S / 2); x.scale(k, k); x.lineCap = 'round';
@@ -302,6 +307,18 @@ function dialPrint(s, c, Rd) {
       [[12, 0, -0.66], [3, 0.68, 0], [9, -0.68, 0]].forEach(([n, a, b]) => x.fillText(n, a * Rd, b * Rd));
     }
     if (s.numerals === 'twelve') { x.font = `800 ${Rd * 0.26}px Montserrat, Arial, sans-serif`; x.fillStyle = c[3]; x.fillText('12', 0, -Rd * 0.68); }
+    /* Marca del reloj y rótulo de función, con la escala de una esfera real */
+    if (brand && s.dial !== 'skeleton') {
+      const pos = { chrono: -0.5, anadigi: -0.2, digital: -0.78, skull: -0.66 }[s.dial], y = (pos != null ? pos : (s.numerals === 'arabic' ? 0.2 : s.numerals === 'twelve' ? -0.4 : -0.46)) * Rd;
+      const sz = Rd * (s.dial === 'skull' || s.dial === 'digital' ? 0.075 : 0.095);
+      x.fillStyle = s.numerals === 'roman' && c[0] === '#D4AF37' ? '#9C7A2E' : ink;
+      x.font = `700 ${sz}px Montserrat, Arial, sans-serif`;
+      if ('letterSpacing' in x) x.letterSpacing = (sz * 0.18) + 'px';
+      x.fillText(brand.toUpperCase(), 0, y);
+      const sub = { chrono: 'CHRONOGRAPH', anadigi: 'DUAL TIME' }[s.dial];
+      if (sub) { const s2 = sz * 0.5; x.font = `600 ${s2}px Montserrat, Arial, sans-serif`; if ('letterSpacing' in x) x.letterSpacing = (s2 * 0.25) + 'px'; x.globalAlpha = 0.8; x.fillText(sub, 0, y + sz * 0.95); x.globalAlpha = 1; }
+      if ('letterSpacing' in x) x.letterSpacing = '0px';
+    }
     if (s.dial === 'chrono') {
       [[-0.45, 0], [0, 0.45], [0.45, 0]].forEach(([a, b], n) => {
         const cx = a * Rd, cy = b * Rd, r = Rd * 0.22;
@@ -341,14 +358,14 @@ function ringPrint(type, R0, R1, col, bg, bg2) {
 }
 
 /* ---------- Construcción del reloj ---------- */
-function buildWatch(spec, ci) {
+function buildWatch(spec, ci, brand) {
   const c = spec.v[ci] || spec.v[0], strapType = spec.strapBy ? spec.strapBy[ci] || spec.strapBy[0] : spec.strap;
   const M = Model(), T = texts(spec, strapType), K = spec.shape, round = K === 'round';
   const W = round ? spec.D : spec.W, H = round ? spec.D : spec.H, R = W / 2, RH = H / 2, Th = spec.T, LW = spec.LW;
   const bezH = 1.8, zt = Th / 2 - bezH - 0.2, Rin = round ? R - Math.max(2.2, R * 0.13) : 0, zd = zt - 1.1;
   const Rd = round ? Rin - 0.9 : W * 0.38, RdH = round ? Rd : H * 0.38;
-  const caseCol = c[0], isResin = spec.caseMat === 'resin';
-  const caseBr = () => isResin ? resin(caseCol) : metal(caseCol, 'brushed'), casePol = () => isResin ? resin(shade(caseCol, 1.1)) : metal(caseCol, 'polished');
+  const caseCol = c[0], isResin = spec.caseMat === 'resin', isTi = spec.caseMat === 'titanium';
+  const caseBr = () => isResin ? resin(caseCol) : metal(caseCol, isTi ? 'titanium' : 'brushed'), casePol = () => isResin ? resin(shade(caseCol, 1.1)) : metal(caseCol, isTi ? 'titanium-polished' : 'polished');
   const dark = hexLum(c[1]) < 0.5;
   const now = new Date();
 
@@ -406,7 +423,7 @@ function buildWatch(spec, ci) {
   else add(pd.g, round ? new THREE.CircleGeometry(Rd, 160) : planarUV(new THREE.ShapeGeometry(outline(K, Rd * 2, RdH * 2), 96), Rd, RdH), dialMat, 0, 0, zd);
   if (round) add(pd.g, lathe([[Rd - 0.1, zd + 0.02], [Rin + 0.05, zt - 0.3], [Rin + 0.05, zt - 0.2], [Rd - 0.1, zd + 0.1]], 0.05, 160), new THREE.MeshStandardMaterial({ color: dark ? shade(c[1], 1.4) : shade(c[1], 0.94), metalness: 0.4, roughness: 0.4 }));
   const printGeo = round ? new THREE.CircleGeometry(Rd, 160) : planarUV(new THREE.ShapeGeometry(outline(K, Rd * 2, RdH * 2), 96), Rd, Rd);
-  if (spec.dial !== 'skeleton') add(pd.g, printGeo, new THREE.MeshStandardMaterial({ map: dialPrint(spec, c, Rd), transparent: true, roughness: 0.5, depthWrite: false }), 0, 0, zd + 0.03);
+  if (spec.dial !== 'skeleton') add(pd.g, printGeo, new THREE.MeshStandardMaterial({ map: dialPrint(spec, c, Rd, brand), transparent: true, roughness: 0.5, depthWrite: false }), 0, 0, zd + 0.03);
   if (spec.pave) {
     const n = 900, im = new THREE.InstancedMesh(gemGeo(0.7), gemMat(), n), o = new THREE.Object3D();
     for (let i = 0; i < n; i++) { const r = Math.sqrt((i + 0.5) / n) * Rd * 0.93, a = i * 2.39996; o.position.set(Math.cos(a) * r, Math.sin(a) * r, zd + 0.12); o.rotation.set(0, 0, a); o.updateMatrix(); im.setMatrixAt(i, o.matrix); }
@@ -546,7 +563,8 @@ function buildWatch(spec, ci) {
     const Hh = mk(spec.hands, Rd * 0.55, Math.max(1.4, Rd * 0.11), zd + 1.0), Mh = mk(spec.hands, Rd * 0.86, Math.max(1.1, Rd * 0.085), zd + 1.45);
     const S = new THREE.Group(); S.position.z = zd + 1.9; ph.g.add(S);
     const sm = metal(spec.dial === 'skeleton' || spec.dial === 'skull' || spec.hands === 'sword' ? c[3] : hc, 'polished');
-    add(S, new THREE.BoxGeometry(0.28, Rd * 1.15, 0.12), sm, 0, Rd * 0.33, 0);
+    const sh = new THREE.Shape(); sh.moveTo(-0.12, Rd * 0.9); sh.lineTo(0.12, Rd * 0.9); sh.lineTo(0.2, -Rd * 0.2); sh.lineTo(-0.2, -Rd * 0.2); sh.closePath();
+    add(S, extrudeC(sh, 0.06, 0.04, 2), sm);
     add(S, lathe([[0, 0], [Math.max(0.9, Rd * 0.06), 0], [Math.max(0.9, Rd * 0.06), 0.2], [0, 0.2]], 0.05, 40), sm, 0, -Rd * 0.2, -0.1);
     add(S, lathe([[0, 0], [0.75, 0], [0.75, 0.6], [0.35, 0.8], [0, 0.8]], 0.15, 40), sm, 0, 0, -0.2);
     M.tick.push(() => { const n = new Date(), s = n.getSeconds() + n.getMilliseconds() / 1000, mi = n.getMinutes() + s / 60, h = (n.getHours() % 12) + mi / 60; S.rotation.z = -s / 60 * TAU; Mh.rotation.z = -mi / 60 * TAU; Hh.rotation.z = -h / 12 * TAU; });
@@ -719,6 +737,50 @@ function studioEnv(renderer) {
   return t;
 }
 
+/* ---------- Sombra de contacto: profundidad desde el suelo, desenfocada ---------- */
+const BLUR = {
+  uniforms: { tDiffuse: { value: null }, d: { value: new THREE.Vector2() } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform sampler2D tDiffuse; uniform vec2 d; varying vec2 vUv; void main(){ vec4 s = vec4(0.0);' +
+    ' s += texture2D(tDiffuse, vUv - 4.0 * d) * 0.051; s += texture2D(tDiffuse, vUv - 3.0 * d) * 0.0918; s += texture2D(tDiffuse, vUv - 2.0 * d) * 0.12245; s += texture2D(tDiffuse, vUv - d) * 0.1531;' +
+    ' s += texture2D(tDiffuse, vUv) * 0.1633; s += texture2D(tDiffuse, vUv + d) * 0.1531; s += texture2D(tDiffuse, vUv + 2.0 * d) * 0.12245; s += texture2D(tDiffuse, vUv + 3.0 * d) * 0.0918; s += texture2D(tDiffuse, vUv + 4.0 * d) * 0.051; gl_FragColor = s; }'
+};
+function contactShadow(renderer) {
+  const N = 512, group = new THREE.Group();
+  const rt = new THREE.WebGLRenderTarget(N, N), rt2 = new THREE.WebGLRenderTarget(N, N);
+  rt.texture.generateMipmaps = rt2.texture.generateMipmaps = false;
+  const geo = new THREE.PlaneGeometry(1, 1).rotateX(Math.PI / 2);
+  const plane = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: rt.texture, transparent: true, opacity: 0.85, depthWrite: false }));
+  plane.scale.y = -1; plane.renderOrder = 1; group.add(plane);
+  const blurPlane = new THREE.Mesh(geo, new THREE.ShaderMaterial(Object.assign({}, BLUR, { uniforms: THREE.UniformsUtils.clone(BLUR.uniforms), depthTest: false })));
+  blurPlane.visible = false; group.add(blurPlane);
+  const cam = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1); cam.rotation.x = Math.PI / 2; group.add(cam);
+  const depth = new THREE.MeshDepthMaterial(); depth.depthTest = depth.depthWrite = false;
+  depth.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( vec3( 1.0 - fragCoordZ ), opacity );', 'gl_FragColor = vec4( vec3( 0.0 ), pow( 1.0 - fragCoordZ, 2.2 ) * 1.4 );'); };
+  let size = 1;
+  function blur(amount) {
+    blurPlane.visible = true; const u = blurPlane.material.uniforms;
+    u.tDiffuse.value = rt.texture; u.d.value.set(amount / N, 0); renderer.setRenderTarget(rt2); renderer.render(blurPlane, cam);
+    u.tDiffuse.value = rt2.texture; u.d.value.set(0, amount / N); renderer.setRenderTarget(rt); renderer.render(blurPlane, cam);
+    blurPlane.visible = false;
+  }
+  return {
+    group, dirty: true,
+    fit(ctr, y, w, h) {
+      size = w; group.position.set(ctr.x, y, ctr.z); plane.scale.set(w, -1, w); blurPlane.scale.set(w, 1, w);
+      Object.assign(cam, { left: -w / 2, right: w / 2, top: w / 2, bottom: -w / 2, near: 0, far: h * 0.55 }); cam.updateProjectionMatrix();
+    },
+    render(scene) {
+      const bg = scene.background, ca = renderer.getClearAlpha();
+      plane.visible = false; scene.background = null; scene.overrideMaterial = depth;
+      renderer.setClearAlpha(0); renderer.setRenderTarget(rt); renderer.clear(); renderer.render(scene, cam);
+      scene.overrideMaterial = null; blur(2.2); blur(0.9);
+      renderer.setRenderTarget(null); renderer.setClearAlpha(ca); scene.background = bg; plane.visible = true;
+    },
+    dispose() { rt.dispose(); rt2.dispose(); }
+  };
+}
+
 /* ---------- Visor (interfaz) ---------- */
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -751,20 +813,28 @@ export function openViewer(product, colorIndex, onColor) {
   stage.prepend(renderer.domElement);
   const scene = new THREE.Scene();
   scene.environment = studioEnv(renderer);
-  const key = new THREE.DirectionalLight('#FFFFFF', 1.2); key.position.set(40, 80, 60); scene.add(key);
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const key = new THREE.DirectionalLight('#FFFFFF', 1.5); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.0004; key.shadow.normalBias = 0.03; key.shadow.radius = 4;
+  scene.add(key, key.target);
   const camera = new THREE.PerspectiveCamera(26, 1, 1, 2000);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.autoRotate = !reduce; controls.autoRotateSpeed = 0.9; controls.enablePan = false;
   controls.addEventListener('start', () => { controls.autoRotate = false; $('.v3d-spin').setAttribute('aria-pressed', 'false'); });
-  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tex(canvas(256, 256, (x, S) => { const g = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2); g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, S, S); })), transparent: true, depthWrite: false }));
-  shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
+  const contact = contactShadow(renderer);
+  scene.add(contact.group);
 
   let M = null, ci = colorIndex || 0, explode = 0, exTarget = 0, sel = null, home = null, camAnim = null, glb = false;
   const clock = new THREE.Clock();
   function dispose(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); if (n.material) [].concat(n.material).forEach(m => m.dispose()); }); }
   function frameModel(root) {
     const box = new THREE.Box3().setFromObject(root), size = box.getSize(V(0, 0, 0)), ctr = box.getCenter(V(0, 0, 0));
-    shadow.position.set(ctr.x, box.min.y - 0.5, ctr.z); shadow.scale.set(size.x * 1.6, size.z * 1.6, 1);
+    contact.fit(ctr, box.min.y - 0.3, Math.max(size.x, size.z) * 1.7, size.y);
+    const ld = V(0.35, 0.85, 0.65).normalize(), R0 = size.length() * 0.6;
+    key.position.copy(ctr).addScaledVector(ld, R0 * 2); key.target.position.copy(ctr);
+    Object.assign(key.shadow.camera, { left: -R0, right: R0, top: R0, bottom: -R0, near: 1, far: R0 * 4 }); key.shadow.camera.updateProjectionMatrix();
+    root.traverse(n => { if (n.isMesh) { const tr = n.material && (n.material.transparent || n.material.transmission); n.castShadow = !tr; n.receiveShadow = true; } });
+    contact.dirty = true;
     if (!home) {
       const r = size.length() * 0.5, dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.92;
       home = { target: ctr.clone(), pos: ctr.clone().add(V(0.28, 0.22, 1).normalize().multiplyScalar(dist)), dist };
@@ -776,7 +846,7 @@ export function openViewer(product, colorIndex, onColor) {
   function load(i) {
     ci = i;
     if (M) { scene.remove(M.root); dispose(M.root); }
-    M = buildWatch(spec, i); scene.add(M.root);
+    M = buildWatch(spec, i, product.brand && product.brand !== 'Lovely' ? product.brand : ''); scene.add(M.root);
     M.parts.forEach(p => { p.base = p.g.position.clone(); p.baseRot = p.g.rotation.clone(); });
     frameModel(M.root);
     hotLayer.innerHTML = ''; const list = $('.v3d-list'); list.innerHTML = '';
@@ -818,6 +888,8 @@ export function openViewer(product, colorIndex, onColor) {
   /* Dispositivos lentos: menos resolución y cristal sin refracción */
   function degrade() {
     lowQ = true; renderer.setPixelRatio(1); resize();
+    renderer.shadowMap.enabled = false; key.castShadow = false;
+    scene.traverse(n => { if (n.material) [].concat(n.material).forEach(m => { m.needsUpdate = true; }); });
     scene.traverse(n => { if (n.material && n.material.transmission) { n.material.transmission = 0; n.material.opacity = 0.12; n.material.needsUpdate = true; } });
   }
   function frame() {
@@ -837,6 +909,7 @@ export function openViewer(product, colorIndex, onColor) {
     }
     if (camAnim) { camAnim.t = Math.min(1, camAnim.t + dt / 0.9); camera.position.lerpVectors(camAnim.from, camAnim.to, ease(camAnim.t)); if (camAnim.t >= 1) camAnim = null; }
     controls.update();
+    if (contact.dirty || Math.abs(exTarget - explode) > 0.002) { contact.render(scene); contact.dirty = false; }
     renderer.render(scene, camera);
     if (!M || glb) return;
     const w = stage.clientWidth, h = stage.clientHeight;
@@ -854,7 +927,7 @@ export function openViewer(product, colorIndex, onColor) {
   function onKey(e) { if (e.key === 'Escape') close(); }
   function close() {
     cancelAnimationFrame(raf); ro.disconnect(); document.removeEventListener('keydown', onKey);
-    dispose(scene); controls.dispose(); renderer.dispose();
+    dispose(scene); contact.dispose(); controls.dispose(); renderer.dispose();
     el.remove(); document.body.style.overflow = '';
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
