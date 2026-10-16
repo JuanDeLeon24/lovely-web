@@ -102,7 +102,7 @@
     var c = catOf(p.cat);
     var sw = p.colors.length > 1 ? '<div class="mini-sw" aria-label="' + p.colors.length + ' colores">' + p.colors.slice(0, 5).map(function (x) { return '<span style="background:' + x.hex + '"></span>'; }).join('') + (p.colors.length > 5 ? '<small>+' + (p.colors.length - 5) + '</small>' : '') + '</div>' : '';
     return '<a class="card reveal" href="producto.html?id=' + p.id + '">' +
-      '<div class="ph photo"><img src="' + photo(p.colors[0].img, true) + '" alt="' + p.name + '" loading="lazy" width="480" height="560">' + (p.badge ? '<span class="badge">' + p.badge + '</span>' : '') + '<span class="chip-3d" title="Disponible en 3D">3D</span></div>' + sw +
+      '<div class="ph photo"><img src="' + photo(p.colors[0].img, true) + '" alt="' + p.name + '" loading="lazy" width="480" height="560">' + (p.badge ? '<span class="badge">' + p.badge + '</span>' : '') + (p.cat === 'relojes' ? '<span class="chip-3d" title="Disponible en 3D">3D</span>' : '') + '</div>' + sw +
       '<div class="stock"><span class="dot"></span>' + (p.stock === 0 ? 'Agotado' : p.stock <= 4 ? 'Últimas unidades' : 'Disponible') + '</div>' +
       '<div class="name">' + p.name + '</div><div class="cat">' + c.name + (p.colors.length > 1 ? ' · ' + p.colors.length + ' colores' : '') + '</div><div class="price">' + money(p.price) + '</div></a>';
   }
@@ -214,6 +214,7 @@
         .then(function (m) { m.openViewer(p, st.color, function (i) { setColor(i); }); })
         .catch(function () { toast('No pudimos cargar la vista 3D. Intenta de nuevo.'); });
     }
+    if (p.cat === 'relojes') {
     var b3 = document.createElement('button');
     b3.type = 'button'; b3.className = 'btn-3d';
     b3.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Explorar en 3D';
@@ -224,6 +225,7 @@
     t3.addEventListener('click', function (e) { e.stopPropagation(); open3D(); });
     thumbs.appendChild(t3);
     if (new URLSearchParams(location.search).get('vista') === '3d') open3D();
+    }
     var sw = $('#swatches');
     sw.innerHTML = p.colors.map(function (n, i) { return '<button class="swatch" data-i="' + i + '" aria-label="' + n.name + '" style="background:' + n.hex + '"></button>'; }).join('');
     function setColor(i, fromView) { st.color = i; $('#p-color').textContent = p.colors[i].name; $$('.swatch', sw).forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (!fromView) setView(i); }
