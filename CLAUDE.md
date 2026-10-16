@@ -6,3 +6,4 @@
 - El manual de marca manda sobre las reglas de las skills de diseño (`.claude/skills/`) cuando se contradigan.
 - No publicar productos con marcas registradas de terceros (Rolex, Diesel, Lacoste, Nike, etc.) salvo que el cliente confirme que son originales o autorizados.
 - Mantener `noindex` y la barra "Vista previa" hasta el lanzamiento.
+- Visor 3D: `js/visor3d.js` (Three.js r160 incluido en `js/vendor/`, sin CDN). Cada producto nuevo necesita su entrada en `SPECS` (tipo, forma y colores por variante en el mismo orden que `colors` en `js/data.js`). Se abre desde la ficha con «Explorar en 3D» o con `producto.html?id=…&vista=3d`.
