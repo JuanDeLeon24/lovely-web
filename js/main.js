@@ -63,7 +63,7 @@
         '<div class="announce"><b>ENVÍOS A TODA COLOMBIA</b> · Paga con PSE, Nequi o tarjeta</div>' +
         '<header class="header"><div class="wrap">' +
         '<button class="icon-btn menu-btn" aria-label="Abrir menú" aria-expanded="false">' + I.menu + '</button>' +
-        '<a class="logo" href="index.html" aria-label="Lovely, ir al inicio"><img src="assets/img/logo-negro.png" alt="LV Accesorios" width="290" height="71"></a>' +
+        '<a class="logo" href="index.html" aria-label="Lovely, ir al inicio"><img src="assets/img/logo-negro.svg" alt="LV Accesorios" width="292" height="71"></a>' +
         '<nav class="nav" aria-label="Principal">' + navLinks() + '</nav>' +
         '<div class="h-actions"><a class="icon-btn" href="tienda.html#buscar" aria-label="Buscar">' + I.search + '</a>' +
         '<a class="icon-btn" href="cuenta.html" aria-label="Mi cuenta">' + I.user + '</a>' +
@@ -81,7 +81,7 @@
         '<footer class="footer"><div class="wrap">' +
         '<div class="news"><div><h3>Sé el primero en conocer los lanzamientos</h3><p>Novedades, colecciones y acceso anticipado. Sin spam.</p></div>' +
         '<form class="js-news"><label class="sr-only" for="nl">Correo electrónico</label><input id="nl" type="email" required placeholder="Tu correo electrónico"><button type="submit">SUSCRIBIRME</button></form></div>' +
-        '<div class="foot-cols"><div class="foot-brand"><img src="assets/img/logo-blanco.png" alt="LV Accesorios" width="290" height="71" style="width:auto"><p>Pequeños detalles, grandes estilos.</p></div>' +
+        '<div class="foot-cols"><div class="foot-brand"><img src="assets/img/logo-blanco.svg" alt="LV Accesorios" width="292" height="71" style="width:auto"><p>Pequeños detalles, grandes estilos.</p></div>' +
         '<div><h4>TIENDA</h4>' + CATS.slice(0, 4).map(function (c) { return '<a href="tienda.html?cat=' + c.slug + '">' + c.name + '</a>'; }).join('') + '</div>' +
         '<div><h4>AYUDA</h4><a href="ayuda.html">Preguntas frecuentes</a><a href="ayuda.html#envios">Envíos y entregas</a><a href="ayuda.html#garantias">Cambios y garantías</a><a href="ayuda.html#contacto">Contacto</a></div>' +
         '<div><h4>LOVELY</h4><a href="nosotros.html">Quiénes somos</a><a href="cuenta.html">Mi cuenta</a><a href="ayuda.html">Términos y condiciones</a><a href="ayuda.html">Política de datos</a></div></div>' +
