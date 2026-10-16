@@ -22,6 +22,7 @@
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
+  var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); };
   var waLink = function (msg) { return 'https://wa.me/' + C.whatsapp + '?text=' + encodeURIComponent(msg || 'Hola Lovely, quiero más información.'); };
 
   /* ---------- Almacenamiento seguro ---------- */
@@ -60,7 +61,7 @@
     if (h) {
       h.outerHTML =
         '<div class="preview-bar">Vista previa en desarrollo · los precios, fotos y textos son de muestra</div>' +
-        '<div class="announce"><b>ENVÍOS A TODA COLOMBIA</b> · Paga con PSE, Nequi o tarjeta</div>' +
+        '<div class="announce"><b>' + esc(C.anuncioTitulo || 'ENVÍOS A TODA COLOMBIA') + '</b>' + (C.anuncioTexto ? ' · ' + esc(C.anuncioTexto) : '') + '</div>' +
         '<header class="header"><div class="wrap">' +
         '<button class="icon-btn menu-btn" aria-label="Abrir menú" aria-expanded="false">' + I.menu + '</button>' +
         '<a class="logo" href="index.html" aria-label="Lovely, ir al inicio"><img src="assets/img/logo-negro.svg" alt="LV Accesorios" width="292" height="71"></a>' +
@@ -102,7 +103,7 @@
     var c = catOf(p.cat);
     var sw = p.colors.length > 1 ? '<div class="mini-sw" aria-label="' + p.colors.length + ' colores">' + p.colors.slice(0, 5).map(function (x) { return '<span style="background:' + x.hex + '"></span>'; }).join('') + (p.colors.length > 5 ? '<small>+' + (p.colors.length - 5) + '</small>' : '') + '</div>' : '';
     return '<a class="card reveal" href="producto.html?id=' + p.id + '">' +
-      '<div class="ph photo"><img src="' + photo(p.colors[0].img, true) + '" alt="' + p.name + '" loading="lazy" width="480" height="560">' + (p.badge ? '<span class="badge">' + p.badge + '</span>' : '') + (p.cat === 'relojes' ? '<span class="chip-3d" title="Disponible en 3D">3D</span>' : '') + '</div>' + sw +
+      '<div class="ph photo"><img src="' + photo(p.colors[0].img, true) + '" alt="' + p.name + '" loading="lazy" width="480" height="560">' + (p.badge ? '<span class="badge">' + p.badge + '</span>' : '') + (p.modelo3d ? '<span class="chip-3d" title="Disponible en 3D">3D</span>' : '') + '</div>' + sw +
       '<div class="stock"><span class="dot"></span>' + (p.stock === 0 ? 'Agotado' : p.stock <= 4 ? 'Últimas unidades' : 'Disponible') + '</div>' +
       '<div class="name">' + p.name + '</div><div class="cat">' + c.name + (p.colors.length > 1 ? ' · ' + p.colors.length + ' colores' : '') + '</div><div class="price">' + money(p.price) + '</div></a>';
   }
@@ -191,6 +192,8 @@
     $('#p-desc').textContent = p.desc; $('#p-badge').textContent = p.badge; $('#p-badge').hidden = !p.badge;
     if (!p.price) $('#p-price small').hidden = true;
     $('#p-stock').innerHTML = '<span class="dot"></span>' + (p.stock === 0 ? 'Agotado · avísame cuando llegue' : 'En stock' + (p.stock <= 5 ? ' · quedan ' + p.stock + ' unidades' : ''));
+    if (C.garantiaDias) $('#p-garantia').textContent = 'Garantía ' + C.garantiaDias + ' días';
+    if (C.entregaDias || C.cambiosDias) $('#p-envios').textContent = (C.entregaDias ? 'Entrega en ' + C.entregaDias + ' días hábiles según ciudad. ' : '') + (C.cambiosDias ? 'Cambios dentro de ' + C.cambiosDias + ' días.' : '');
     var views = p.colors.map(function (x) { return { l: x.name, img: x.img }; }).concat(p.extra.map(function (x, i) { return { l: 'detalle ' + (i + 1), img: x }; }));
     var main = $('#main-img'), thumbs = $('#thumbs');
     thumbs.innerHTML = views.map(function (v, i) { return '<button aria-label="Ver foto ' + v.l + '" data-i="' + i + '"><img src="' + photo(v.img, true) + '" alt="" loading="lazy"></button>'; }).join('');
@@ -214,7 +217,7 @@
         .then(function (m) { m.openViewer(p, st.color, function (i) { setColor(i); }); })
         .catch(function () { toast('No pudimos cargar la vista 3D. Intenta de nuevo.'); });
     }
-    if (p.cat === 'relojes') {
+    if (p.modelo3d) {
     var b3 = document.createElement('button');
     b3.type = 'button'; b3.className = 'btn-3d';
     b3.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Explorar en 3D';

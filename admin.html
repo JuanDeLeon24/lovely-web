@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel administrativo | Lovely</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- Acceso -->
+<section id="login" class="login" hidden>
+  <div class="login-card">
+    <img src="assets/img/logo-negro.svg" alt="LV Accesorios" class="login-logo">
+    <h1>Panel administrativo</h1>
+    <p class="muted">Edita productos, fotos, precios y datos de venta. Los cambios se guardan en el repositorio de la tienda y la página se actualiza en 1 o 2 minutos.</p>
+    <form id="login-form" novalidate>
+      <label>Token de acceso de GitHub
+        <input id="f-token" type="password" autocomplete="off" required placeholder="github_pat_…">
+      </label>
+      <label>Repositorio
+        <input id="f-repo" required value="juandeleon24/lovely-web">
+      </label>
+      <label>Rama
+        <input id="f-branch" required value="main">
+      </label>
+      <label class="check"><input id="f-remember" type="checkbox"> Recordar en este dispositivo</label>
+      <p id="login-error" class="error" role="alert" hidden></p>
+      <button class="btn btn-dark btn-block" type="submit">Entrar</button>
+    </form>
+    <details class="help">
+      <summary>¿Cómo obtengo el token?</summary>
+      <ol>
+        <li>En GitHub abre <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens</b> y pulsa <b>Generate new token</b>.</li>
+        <li>En <b>Repository access</b> elige <b>Only select repositories</b> y marca <b>lovely-web</b>.</li>
+        <li>En <b>Permissions → Repository permissions</b> pon <b>Contents: Read and write</b>.</li>
+        <li>Copia el token y pégalo aquí. No lo compartas: quien lo tenga puede editar la tienda.</li>
+      </ol>
+    </details>
+  </div>
+</section>
+
+<!-- Panel -->
+<div id="app" hidden>
+  <header class="top">
+    <img src="assets/img/logo-blanco.svg" alt="LV Accesorios" class="top-logo">
+    <span class="top-title">Panel administrativo</span>
+    <span id="status" class="status" aria-live="polite"></span>
+    <button id="publish" class="btn btn-gold" disabled>Publicar cambios</button>
+    <button id="logout" class="btn btn-ghost">Salir</button>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="productos" aria-selected="true">Productos</button>
+    <button role="tab" data-tab="categorias" aria-selected="false">Categorías</button>
+    <button role="tab" data-tab="ventas" aria-selected="false">Ventas y contacto</button>
+    <button role="tab" data-tab="respaldo" aria-selected="false">Respaldo</button>
+  </nav>
+
+  <main class="wrap">
+    <section data-panel="productos">
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Buscar producto…" aria-label="Buscar producto">
+        <select id="fcat" aria-label="Filtrar por categoría"></select>
+        <button id="new-product" class="btn btn-dark">+ Nuevo producto</button>
+      </div>
+      <p id="count" class="muted"></p>
+      <div id="list" class="plist"></div>
+    </section>
+
+    <section data-panel="categorias" hidden>
+      <p class="muted">Nombre, ícono y foto de portada de cada categoría del menú y del inicio.</p>
+      <div id="cats" class="cards"></div>
+      <button id="new-cat" class="btn btn-outline">+ Nueva categoría</button>
+    </section>
+
+    <section data-panel="ventas" hidden>
+      <form id="cfg" class="form-grid">
+        <h2>Contacto</h2>
+        <label>WhatsApp (con indicativo, sin + ni espacios)<input name="whatsapp" inputmode="numeric" placeholder="573001234567"></label>
+        <label>Instagram (enlace)<input name="instagram" type="url"></label>
+        <label>TikTok (enlace)<input name="tiktok" type="url"></label>
+        <label>Facebook (enlace)<input name="facebook" type="url"></label>
+        <h2>Barra de anuncio</h2>
+        <label>Texto destacado<input name="anuncioTitulo" placeholder="ENVÍOS A TODA COLOMBIA"></label>
+        <label>Texto complementario<input name="anuncioTexto" placeholder="Paga con PSE, Nequi o tarjeta"></label>
+        <h2>Envíos, cambios y garantía</h2>
+        <label>Días hábiles de entrega<input name="entregaDias" placeholder="Ej.: 2 a 5"></label>
+        <label>Días para cambios<input name="cambiosDias" inputmode="numeric" placeholder="Ej.: 15"></label>
+        <label>Días de garantía<input name="garantiaDias" inputmode="numeric" placeholder="Ej.: 90"></label>
+      </form>
+    </section>
+
+    <section data-panel="respaldo" hidden>
+      <h2>Respaldo del catálogo</h2>
+      <p class="muted">Descarga una copia de todos los datos (productos, precios, categorías y contacto) para guardarla.</p>
+      <button id="backup" class="btn btn-outline">Descargar copia (JSON)</button>
+      <h2>Restaurar</h2>
+      <p class="muted">Carga una copia descargada antes. Reemplaza los datos actuales; luego revisa y pulsa «Publicar cambios».</p>
+      <label class="btn btn-outline file">Cargar copia…<input id="restore" type="file" accept="application/json" hidden></label>
+    </section>
+  </main>
+</div>
+
+<!-- Editor de producto -->
+<dialog id="editor" class="editor" aria-labelledby="ed-title">
+  <form id="ed-form" method="dialog" novalidate>
+    <header class="ed-head">
+      <h2 id="ed-title">Editar producto</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
+    </header>
+    <div class="ed-body">
+      <div class="form-grid">
+        <label class="span2">Nombre<input name="name" required></label>
+        <label>Identificador (URL)<input name="id" required pattern="[a-z0-9-]+"><small>Solo minúsculas, números y guiones. No se puede cambiar después de publicar.</small></label>
+        <label>Marca<input name="brand"></label>
+        <label>Categoría<select name="cat"></select></label>
+        <label>Etiqueta<input name="badge" list="badges" placeholder="Nuevo, Más vendido…"></label>
+        <label>Precio (COP)<input name="price" type="number" min="0" step="100" inputmode="numeric"><small>0 = «Precio por confirmar»</small></label>
+        <label>Unidades en stock<input name="stock" type="number" min="0" step="1" inputmode="numeric"><small>0 = agotado</small></label>
+        <label class="check"><input name="top" type="checkbox"> Destacado (más vendidos)</label>
+        <label class="check"><input name="nuevo" type="checkbox"> Novedad</label>
+        <label class="span2">Descripción<textarea name="desc" rows="4"></textarea></label>
+      </div>
+      <h3>Colores y fotos</h3>
+      <p class="muted small">Cada color tiene su foto principal. Las fotos se optimizan solas (900 px y miniatura de 480 px).</p>
+      <div id="ed-colors" class="colors"></div>
+      <button type="button" id="add-color" class="btn btn-outline">+ Agregar color</button>
+      <h3>Fotos de detalle</h3>
+      <div id="ed-extra" class="extras"></div>
+      <label class="btn btn-outline file">+ Agregar fotos de detalle<input id="add-extra" type="file" accept="image/*" multiple hidden></label>
+      <p id="ed-error" class="error" role="alert" hidden></p>
+    </div>
+    <footer class="ed-foot">
+      <button type="button" id="ed-delete" class="btn btn-danger">Eliminar producto</button>
+      <span class="grow"></span>
+      <button type="button" class="btn btn-ghost-dark" data-close>Cancelar</button>
+      <button type="submit" class="btn btn-dark">Guardar</button>
+    </footer>
+  </form>
+</dialog>
+<datalist id="badges"><option>Nuevo</option><option>Más vendido</option><option>Top</option><option>Ideal para regalo</option><option>Edición limitada</option><option>Oferta</option></datalist>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="js/admin.js"></script>
+</body>
+</html>
