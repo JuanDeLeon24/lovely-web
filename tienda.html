@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tienda | Lovely Accesorios</title>
+<meta name="description" content="Gorras, gafas, relojes, pulseras y cadenas con diseño urbano premium. Envíos a toda Colombia.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="tienda">
+<div id="site-header"></div>
+
+<main class="wrap">
+  <nav class="crumbs" aria-label="Ruta"><a href="index.html">Inicio</a> / Tienda / <span id="crumb-current" style="color:#111">Todos</span></nav>
+  <div class="shop-head">
+    <label class="sr-only" for="buscar">Buscar productos</label>
+    <input class="search" id="buscar" type="search" placeholder="Buscar gorras, gafas, relojes…">
+    <h1 id="shop-title">Todos los accesorios</h1>
+    <div class="count" id="shop-count"></div>
+  </div>
+  <div class="pills" id="pills" style="margin-top:18px"></div>
+
+  <div class="shop-bar">
+    <button class="filter-toggle" aria-expanded="false" aria-controls="filters"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.6" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filtrar</button>
+    <label class="sr-only" for="sort">Ordenar por</label>
+    <select id="sort">
+      <option value="destacados">Destacados</option>
+      <option value="top">Más vendidos</option>
+      <option value="nuevos">Novedades</option>
+      <option value="precio-asc">Precio: menor a mayor</option>
+      <option value="precio-desc">Precio: mayor a menor</option>
+    </select>
+  </div>
+
+  <div class="shop-layout">
+    <aside class="filters" id="filters" aria-label="Filtros">
+      <fieldset><legend>PRECIO</legend>
+        <label for="f-precio" style="font-size:13px;color:#3A3A3A">Hasta $ [MÁXIMO]</label>
+        <input id="f-precio" type="range" min="0" max="100" value="100">
+      </fieldset>
+      <fieldset><legend>DISPONIBILIDAD</legend>
+        <label><input type="checkbox" id="f-stock"> Solo en stock</label>
+      </fieldset>
+      <fieldset><legend>DESTACADOS</legend>
+        <label><input type="checkbox" name="f-dest" value="top"> Más vendidos</label>
+        <label><input type="checkbox" name="f-dest" value="nuevos"> Novedades</label>
+      </fieldset>
+    </aside>
+    <div class="shop-main">
+      <div class="grid-products" id="shop-grid"></div>
+    </div>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

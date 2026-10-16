@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi cuenta | Lovely Accesorios</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="assets/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="cuenta">
+<div id="site-header"></div>
+<main class="wrap">
+  <div class="two-col" style="padding-top:36px">
+    <section style="background:#F5F5F5;padding:28px 20px">
+      <h1 style="font-size:26px;margin-bottom:18px">Ingresa a tu cuenta</h1>
+      <div class="seg"><button aria-pressed="true" data-mode="ingreso">Iniciar sesión</button><button aria-pressed="false" data-mode="registro">Crear cuenta</button></div>
+      <form id="auth-form" class="fields">
+        <div id="reg-fields" hidden class="fields" style="margin:0"><label class="field">Nombre completo<input autocomplete="name"></label></div>
+        <label class="field">Correo o celular<input required autocomplete="username" placeholder="tu@correo.com"></label>
+        <label class="field">Contraseña<input required type="password" autocomplete="current-password"></label>
+        <button class="btn btn-dark" id="auth-submit" type="submit">ENTRAR</button>
+        <button class="btn btn-outline" type="button" style="text-transform:none;letter-spacing:0;font-family:Poppins,sans-serif;font-weight:500">Recibir código por WhatsApp</button>
+      </form>
+    </section>
+
+    <section style="padding-top:28px">
+      <div class="eyebrow">Ejemplo con sesión iniciada</div>
+      <h2 style="font-size:26px;margin-bottom:6px">Hola, [Nombre]</h2>
+      <p class="note" style="margin:0 0 8px">Tus pedidos y su estado de envío.</p>
+      <article class="order">
+        <div class="order-top"><strong>#LV-[NÚMERO]</strong><span class="tag dark">En camino</span></div>
+        <div class="note">[Fecha] · 2 productos · $ [TOTAL]</div>
+        <ol class="track"><li class="done">Confirmado</li><li class="done">Preparando</li><li class="now">En camino</li><li>Entregado</li></ol>
+        <div style="margin-top:16px;padding:14px;background:#F5F5F5;font-size:12px;line-height:1.6">Guía Inter Rapidísimo: <strong>[N.º DE GUÍA]</strong><br>Entrega estimada: [FECHA]</div>
+        <a class="btn btn-outline btn-block" href="https://interrapidisimo.com" target="_blank" rel="noopener" style="margin-top:12px;min-height:48px">Rastrear envío</a>
+      </article>
+      <article class="order"><div class="order-top"><div><strong>#LV-[NÚMERO]</strong><div class="note">[Fecha] · 1 producto</div></div><span class="tag line">Entregado</span></div></article>
+    </section>
+  </div>
+</main>
+<div id="site-footer"></div>
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
