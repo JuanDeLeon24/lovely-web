@@ -10,6 +10,9 @@ Sitio estático de avance para revisión del cliente. Publicado con GitHub Pages
 - `js/main.js` interacciones (carrito, filtros, galería, checkout)
 - `assets/` logos e iconos
 
+## Catálogo
+23 productos con sus variantes de color (14 relojes, 7 gorras, 2 gafas). Fotos en `assets/products/`, datos en `js/data.js`.
+
 ## Pendiente de contenido
 Fotos reales, precios, testimonios, número de WhatsApp, usuarios de redes, tiempos y tarifas de envío, políticas de garantía y cambios.
 
