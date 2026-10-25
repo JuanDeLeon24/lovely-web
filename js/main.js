@@ -112,7 +112,7 @@
         '<div><h4>TIENDA</h4>' + CATS.slice(0, 4).map(function (c) { return '<a href="tienda.html?cat=' + c.slug + '">' + c.name + '</a>'; }).join('') + '</div>' +
         '<div><h4>AYUDA</h4><a href="ayuda.html">Preguntas frecuentes</a><a href="ayuda.html#envios">Envíos y entregas</a><a href="ayuda.html#garantias">Cambios y garantías</a><a href="ayuda.html#contacto">Contacto</a></div>' +
         '<div><h4>LOVELY</h4><a href="nosotros.html">Quiénes somos</a><a href="ayuda.html#terminos">Términos y condiciones</a><a href="ayuda.html#datos">Política de datos (Habeas Data)</a></div></div>' +
-        '<div class="foot-bottom"><span>© ' + new Date().getFullYear() + ' Lovely · LV Accesorios · Colombia</span><span>PSE · Nequi · Visa · Mastercard</span></div>' +
+        '<div class="foot-bottom"><span>© ' + new Date().getFullYear() + ' Lovely · LV Accesorios · Colombia</span><span>Compra fácil por WhatsApp</span></div>' +
         '</div></footer>' +
         '<a class="wa-fab" href="' + waLink() + '" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" style="color:#D4AF37">' + I.wa + '</a>';
     }
@@ -395,11 +395,14 @@
   function initCheckout() {
     var step = 1;
     var orderData = {}; // Almacena todos los datos del pedido
+    var lastTotals = { sub: 0, ship: 0 }; // Últimos totales válidos (para el paso 3)
 
     function renderSummary() {
       var it = Cart.items(), box = $('#lines');
       if (!it.length) {
-        box.innerHTML = '<p class="note">Tu carrito está vacío. <a class="link-line" href="tienda.html">Ir a la tienda</a></p>';
+        box.innerHTML = (step === 3 && orderData.numero)
+          ? '<p class="note">Pedido <strong>' + orderData.numero + '</strong> enviado por WhatsApp. <a class="link-line" href="tienda.html">Seguir comprando</a></p>'
+          : '<p class="note">Tu carrito está vacío. <a class="link-line" href="tienda.html">Ir a la tienda</a></p>';
       } else {
         box.innerHTML = it.map(function (x, i) {
           var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; if (!p) return '';
@@ -416,8 +419,10 @@
           else if (envioSel.value === 'contraentrega') ship = 15000;
         }
       }
+      if (it.length) lastTotals = { sub: sub, ship: ship };
+      else if (step === 3 && lastTotals.sub) { sub = lastTotals.sub; ship = lastTotals.ship; }
       $('#t-sub').textContent = sub ? money(sub) : 'Por confirmar';
-      $('#t-ship').textContent = ship ? money(ship) : (step >= 2 ? 'Seleccione envío' : 'Se calcula en el paso 2');
+      $('#t-ship').textContent = it.length ? (ship ? money(ship) : 'Seleccione envío') : (step === 3 && lastTotals.sub ? money(ship) : 'Se calcula en el paso 2');
       $('#t-total').textContent = (sub + ship) ? money(sub + ship) : 'Por confirmar';
       $('#co-empty').hidden = it.length > 0;
 
@@ -544,6 +549,8 @@
       // Limpiar carrito y mostrar confirmación
       Cart.set([]);
       $('#order-n').textContent = orderData.numero;
+      var waC = $('#wa-confirm');
+      if (waC) waC.href = waLink('Hola Lovely, quiero saber el estado de mi pedido ' + orderData.numero);
       go(3);
     });
 
@@ -611,9 +618,29 @@
 
   /* ---------- Ayuda ---------- */
   function initHelp() {
+    renderFaqs();
     $$('.js-contact').forEach(function (f) { f.addEventListener('submit', function (e) { e.preventDefault(); f.reset(); toast('¡Mensaje enviado! Te responderemos pronto.'); }); });
     var h = location.hash.replace('#', '');
-    if (h) { var d = $('#' + h); if (d && d.tagName === 'DETAILS') d.open = true; }
+    if (h) {
+      var d = $('#' + h);
+      if (d && d.tagName === 'DETAILS') d.open = true;
+      else if (d) { var first = $('details', d); if (first) first.open = true; }
+    }
+  }
+
+  /* Preguntas frecuentes editables desde el panel (LV_FAQS) */
+  function renderFaqs() {
+    var faqs = window.LV_FAQS || [];
+    if (!faqs.length) return;
+    $$('[data-faq]').forEach(function (box) {
+      var cat = box.getAttribute('data-faq');
+      var items = faqs.filter(function (f) { return f.categoria === cat; })
+        .sort(function (a, b) { return (a.orden || 0) - (b.orden || 0); });
+      if (!items.length) return;
+      box.innerHTML = items.map(function (f, i) {
+        return '<details' + (i === 0 ? ' open' : '') + '><summary>' + esc(f.pregunta) + '</summary><p>' + f.respuesta + '</p></details>';
+      }).join('');
+    });
   }
 
   renderChrome();

@@ -8,14 +8,14 @@ window.LV_CONFIG = {
   "tiktok": "https://tiktok.com/",
   "facebook": "https://www.facebook.com/share/19tQ1fWbon/?mibextid=wwXIfr",
   "anuncioTitulo": "ENVÍOS A TODA COLOMBIA",
-  "anuncioTexto": "Paga con PSE, Nequi o tarjeta",
+  "anuncioTexto": "Compra fácil por WhatsApp",
   "entregaDias": "3-5",
   "cambiosDias": "30",
   "garantiaDias": "365",
   "email": "Lovelyaccesorios182@gmail.com",
   // SEO y metadatos globales
   "seoTitle": "Lovely | Gorras, gafas y relojes con estilo en Colombia",
-  "seoDescription": "Accesorios de moda: relojes, gorras y gafas. Envíos a toda Colombia. Pago seguro con PSE, Nequi y tarjeta. Garantía y cambios fáciles.",
+  "seoDescription": "Accesorios de moda: relojes, gorras y gafas. Envíos a toda Colombia. Compra fácil por WhatsApp, con envío a todo el país. Garantía y cambios fáciles.",
   "seoKeywords": "relojes, gorras, gafas, accesorios, moda, Colombia, Lovely",
   // Hero principal (index.html)
   "heroTitulo": "Pequeños detalles, grandes estilos",
@@ -42,8 +42,8 @@ window.LV_CATEGORIES = [
 
 // Preguntas frecuentes editables desde admin
 window.LV_FAQS = [
-  {"categoria":"pagos","orden":1,"pregunta":"¿Qué medios de pago aceptan?","respuesta":"PSE, Nequi y tarjetas de crédito o débito (Visa, Mastercard), procesados por una pasarela colombiana certificada (Wompi)."},
-  {"categoria":"pagos","orden":2,"pregunta":"¿Es seguro pagar en la web?","respuesta":"Sí. El pago se hace en un entorno cifrado y Lovely nunca almacena los datos de tu tarjeta. Todo lo maneja Wompi (Bancolombia) bajo estándares PCI-DSS."},
+  {"categoria":"pagos","orden":1,"pregunta":"¿Cómo puedo comprar?","respuesta":"Armas tu pedido en la web y lo confirmas por WhatsApp. Allí coordinamos el pago (Nequi, transferencia o contra entrega) y el envío."},
+  {"categoria":"pagos","orden":2,"pregunta":"¿Es seguro comprar en la web?","respuesta":"Sí. No pedimos ni almacenamos datos de tarjeta. Solo usamos tus datos de contacto y envío para gestionar el pedido, con tu autorización (Ley 1581/2012)."},
   {"categoria":"pagos","orden":3,"pregunta":"¿Puedo pagar contra entrega?","respuesta":"Sí, disponible en ciudades principales con cobertura de Inter Rapidísimo. Tiene un costo adicional de $15.000 COP. Verifica en el checkout si tu ciudad aplica."},
   {"categoria":"envios","orden":1,"pregunta":"¿Hacen envíos a toda Colombia?","respuesta":"Sí, enviamos a todo el país a través de Inter Rapidísimo y Servientrega. Llegamos a más de 1.100 municipios."},
   {"categoria":"envios","orden":2,"pregunta":"¿Cuánto tarda mi pedido?","respuesta":"Ciudades principales: 2–3 días hábiles. Resto del país: 3–5 días hábiles. Zonas de difícil acceso: hasta 7 días hábiles."},
