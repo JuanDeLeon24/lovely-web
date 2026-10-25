@@ -139,15 +139,6 @@ h1,h2,h3{font-family:var(--f-titulo);margin:0}
 .story h2{font-size:26px;margin:20px auto 14px;max-width:720px;line-height:1.25}
 .story p{font-size:15px;line-height:1.8;color:var(--grafito);max-width:640px;margin:0 auto 22px;font-weight:300}
 
-/* Testimonios */
-.testi-bg{background:var(--gris-claro);margin-top:56px;padding:48px 0}
-.testi{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none}
-.testi figure{flex:0 0 290px;margin:0;background:var(--surface);padding:24px;display:flex;flex-direction:column;gap:12px}
-.stars{color:var(--dorado);letter-spacing:3px}
-.testi blockquote{margin:0;font-size:14px;line-height:1.65;color:var(--grafito)}
-.testi figcaption{font-size:12px;font-weight:600}
-.testi figcaption span{font-weight:400;color:var(--texto-2)}
-
 /* Social */
 .social-links{display:flex;gap:8px;flex-wrap:wrap}
 .social-links a{border:1px solid var(--ink);padding:10px 16px;font-size:13px;font-weight:500;transition:background .2s,color .2s}
@@ -215,7 +206,6 @@ h1,h2,h3{font-family:var(--f-titulo);margin:0}
 .zoom-hint{position:absolute;right:14px;bottom:14px;font-size:11px;display:flex;gap:6px;align-items:center}
 .pd-info{display:flex;flex-direction:column;gap:16px}
 .pd-info h1{font-size:28px;line-height:1.12;font-weight:700}
-.rating{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--grafito)}
 .pd-price{font-family:var(--f-titulo);font-size:24px;font-weight:700}
 .pd-price small{font-family:var(--f-texto);font-size:12px;font-weight:400;color:var(--texto-2)}
 .pd-desc{margin:0;font-size:15px;line-height:1.75;color:var(--grafito);font-weight:300}
@@ -287,6 +277,24 @@ h1,h2,h3{font-family:var(--f-titulo);margin:0}
 .help-box b{color:var(--dorado)}
 .done-box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0}
 .check{width:68px;height:68px;border-radius:50%;background:var(--negro);display:flex;align-items:center;justify-content:center}
+
+/* Habeas Data y consentimientos en checkout */
+.habeas-fieldset{margin:20px 0;padding:16px;background:var(--gris-claro);border:1px solid var(--borde);border-radius:12px}
+.habeas-fieldset legend{font-weight:700;font-size:13px;margin-bottom:12px;color:var(--ink)}
+.checkbox-field{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer;font-size:13px;line-height:1.5}
+.checkbox-field input[type=checkbox]{flex-shrink:0;width:18px;height:18px;margin-top:2px;accent-color:var(--dorado)}
+.checkbox-field span{font-weight:400;color:var(--ink)}
+.checkbox-field strong{font-weight:600;display:block;margin-bottom:2px}
+.checkbox-field small{display:block;color:var(--texto-2);font-size:11px;margin-top:4px}
+.checkbox-field a{color:var(--dorado);text-decoration:underline}
+
+/* Wompi widget container */
+#wompi-widget{margin:12px 0}
+.payment-methods{display:flex;flex-direction:column;gap:8px}
+
+/* Estados de pago */
+.pay-error{color:var(--rojo);font-size:12px;margin-top:8px;display:none}
+.pay-error[style*="block"]{display:block}
 
 /* Páginas de contenido */
 .page-hero{background:var(--negro);color:#fff;text-align:center;padding:48px var(--pad) 56px;display:flex;flex-direction:column;align-items:center;gap:16px}
@@ -383,9 +391,6 @@ h1,h2,h3{font-family:var(--f-titulo);margin:0}
   .promo-media img{width:150px}
   .story{padding-top:110px}
   .story h2{font-size:34px}
-  .testi-bg{margin-top:96px;padding:90px 0}
-  .testi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;overflow:visible}
-  .testi figure{padding:36px 32px}
   .social-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
   .news{flex-direction:row;justify-content:space-between;align-items:center}
   .news form{flex:0 1 480px}

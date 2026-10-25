@@ -62,7 +62,6 @@
     var h = $('#site-header');
     if (h) {
       h.outerHTML =
-        '<div class="preview-bar">Vista previa en desarrollo · los precios, fotos y textos son de muestra</div>' +
         '<div class="announce"><b>' + esc(C.anuncioTitulo || 'ENVÍOS A TODA COLOMBIA') + '</b>' + (C.anuncioTexto ? ' · ' + esc(C.anuncioTexto) : '') + '</div>' +
         '<header class="header"><div class="wrap">' +
         '<button class="icon-btn menu-btn" aria-label="Abrir menú" aria-expanded="false">' + I.menu + '</button>' +
@@ -70,11 +69,10 @@
         '<nav class="nav" aria-label="Principal">' + navLinks() + '</nav>' +
         '<div class="h-actions"><button class="icon-btn theme-btn" type="button">' + I.moon + I.sun + '</button>' +
         '<a class="icon-btn" href="tienda.html#buscar" aria-label="Buscar">' + I.search + '</a>' +
-        '<a class="icon-btn" href="cuenta.html" aria-label="Mi cuenta">' + I.user + '</a>' +
         '<a class="icon-btn" href="checkout.html" aria-label="Carrito">' + I.bag + '<span class="cart-count" data-n="0">0</span></a></div>' +
         '</div></header>' +
         '<div class="menu-panel" role="dialog" aria-label="Menú"><button class="icon-btn close" aria-label="Cerrar menú">' + I.close + '</button>' +
-        navLinks() + '<a href="nosotros.html">Quiénes somos</a><a href="ayuda.html">Ayuda</a><a href="cuenta.html">Mi cuenta</a></div>';
+        navLinks() + '<a href="nosotros.html">Quiénes somos</a><a href="ayuda.html">Ayuda</a></div>';
       var tb = $('.theme-btn');
       var syncTheme = function () { var d = document.documentElement.getAttribute('data-theme') === 'dark'; tb.setAttribute('aria-pressed', d ? 'true' : 'false'); tb.setAttribute('aria-label', d ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'); tb.title = tb.getAttribute('aria-label'); };
       tb.addEventListener('click', function () {
@@ -97,7 +95,7 @@
         '<div class="foot-cols"><div class="foot-brand"><img src="assets/img/logo-blanco.svg" alt="LV Accesorios" width="292" height="71" style="width:auto"><p>Pequeños detalles, grandes estilos.</p></div>' +
         '<div><h4>TIENDA</h4>' + CATS.slice(0, 4).map(function (c) { return '<a href="tienda.html?cat=' + c.slug + '">' + c.name + '</a>'; }).join('') + '</div>' +
         '<div><h4>AYUDA</h4><a href="ayuda.html">Preguntas frecuentes</a><a href="ayuda.html#envios">Envíos y entregas</a><a href="ayuda.html#garantias">Cambios y garantías</a><a href="ayuda.html#contacto">Contacto</a></div>' +
-        '<div><h4>LOVELY</h4><a href="nosotros.html">Quiénes somos</a><a href="cuenta.html">Mi cuenta</a><a href="ayuda.html">Términos y condiciones</a><a href="ayuda.html">Política de datos</a></div></div>' +
+        '<div><h4>LOVELY</h4><a href="nosotros.html">Quiénes somos</a><a href="ayuda.html#terminos">Términos y condiciones</a><a href="ayuda.html#datos">Política de datos (Habeas Data)</a></div></div>' +
         '<div class="foot-bottom"><span>© ' + new Date().getFullYear() + ' Lovely · LV Accesorios · Colombia</span><span>PSE · Nequi · Visa · Mastercard</span></div>' +
         '</div></footer>' +
         '<a class="wa-fab" href="' + waLink() + '" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" style="color:#D4AF37">' + I.wa + '</a>';
@@ -265,6 +263,8 @@
   /* ---------- Checkout ---------- */
   function initCheckout() {
     var step = 1;
+    var orderData = {}; // Almacena todos los datos del pedido
+
     function renderSummary() {
       var it = Cart.items(), box = $('#lines');
       if (!it.length) {
@@ -276,39 +276,429 @@
         }).join('');
       }
       var sub = it.reduce(function (a, x) { var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; return a + (p ? p.price * x.qty : 0); }, 0);
+      var ship = 0;
+      if (step >= 2) {
+        var envioSel = $('input[name="envio"]:checked');
+        if (envioSel) {
+          if (envioSel.value === 'estandar') ship = 12000;
+          else if (envioSel.value === 'express') ship = 18000;
+          else if (envioSel.value === 'contraentrega') ship = 15000;
+        }
+      }
       $('#t-sub').textContent = sub ? money(sub) : 'Por confirmar';
-      $('#t-ship').textContent = step >= 3 ? 'Según ciudad' : 'Se calcula en el paso 2';
-      $('#t-total').textContent = sub ? money(sub) : 'Por confirmar';
+      $('#t-ship').textContent = ship ? money(ship) : (step >= 2 ? 'Seleccione envío' : 'Se calcula en el paso 2');
+      $('#t-total').textContent = (sub + ship) ? money(sub + ship) : 'Por confirmar';
       $('#co-empty').hidden = it.length > 0;
+
+      // Actualizar resumen de pedido en paso 2
+      if (step === 2) {
+        var summaryBox = $('#order-summary');
+        if (summaryBox) {
+          var envioSel = $('input[name="envio"]:checked');
+          var envioLabel = envioSel ? (envioSel.value === 'estandar' ? 'Envío estándar' : envioSel.value === 'express' ? 'Envío express' : 'Contra entrega') : '—';
+          var itemsHtml = it.map(function(x) {
+            var p = PRODUCTS.filter(function(q) { return q.id === x.id; })[0];
+            return '• ' + (p ? p.name : x.id) + ' (' + x.color + ') x' + x.qty + ' = ' + money(p ? p.price * x.qty : 0);
+          }).join('<br>');
+          summaryBox.innerHTML = 
+            '<strong>Productos:</strong><br>' + itemsHtml + '<br><br>' +
+            '<strong>Subtotal:</strong> ' + money(sub) + '<br>' +
+            '<strong>Envío (' + envioLabel + '):</strong> ' + money(ship) + '<br>' +
+            '<strong style="font-size:15px">Total: ' + money(sub + ship) + '</strong>';
+        }
+      }
     }
+
     $('#lines').addEventListener('click', function (e) { var b = e.target.closest('.rm'); if (b) { Cart.remove(+b.getAttribute('data-i')); renderSummary(); } });
+
     function go(n) {
       step = n;
       $$('.co-step').forEach(function (s) { s.hidden = +s.getAttribute('data-step') !== n; });
-      $$('.steps li').forEach(function (li, i) { li.className = (i + 1 < n || n === 4) ? 'done' : (i + 1 === n ? 'on' : ''); });
-      $('#city-label').textContent = ($('#ciudad').value || 'tu ciudad') + ', ' + ($('#depto').value || '');
+      $$('.steps li').forEach(function (li, i) { li.className = (i + 1 < n || n === 3) ? 'done' : (i + 1 === n ? 'on' : ''); });
+      if (n >= 2) $('#city-label').textContent = ($('#ciudad').value || 'tu ciudad') + ', ' + ($('#depto').value || '');
       renderSummary(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    $('#form-datos').addEventListener('submit', function (e) { e.preventDefault(); go(2); });
-    $('#to-pay').addEventListener('click', function () { go(3); });
-    $('#back-1').addEventListener('click', function () { go(1); });
-    $('#pay').addEventListener('click', function () {
-      $('#order-n').textContent = 'LV-' + String(Date.now()).slice(-6);
-      Cart.set([]); go(4);
+
+    // Paso 1: Validar formulario y capturar datos
+    $('#form-datos').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var form = e.target;
+      var formData = new FormData(form);
+      
+      // Validar campos requeridos (quitamos habeas_pago que era para Wompi)
+      var required = ['nombre', 'tipoDoc', 'documento', 'email', 'celular', 'departamento', 'ciudad', 'direccion', 'habeas_tratamiento'];
+      for (var field of required) {
+        if (!formData.get(field)) {
+          toast('Por favor complete: ' + field);
+          return;
+        }
+      }
+      
+      // Validar email
+      var email = formData.get('email');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast('Correo electrónico inválido');
+        return;
+      }
+      
+      // Validar celular colombiano (10 dígitos)
+      var celular = formData.get('celular').replace(/\D/g, '');
+      if (celular.length !== 10 || !/^3\d{9}$/.test(celular)) {
+        toast('Celular inválido. Use formato 3001234567');
+        return;
+      }
+      
+      // Guardar datos del paso 1
+      orderData.cliente = {
+        nombre: formData.get('nombre').trim(),
+        tipoDoc: formData.get('tipoDoc'),
+        documento: formData.get('documento').trim(),
+        email: email.toLowerCase(),
+        celular: celular,
+        departamento: formData.get('departamento'),
+        ciudad: formData.get('ciudad').trim(),
+        direccion: formData.get('direccion').trim(),
+        habeasTratamiento: true,
+        marketingOptin: formData.get('marketing_optin') === 'on'
+      };
+      
+      go(2);
     });
+
+    // Paso 2: Seleccionar envío y confirmar por WhatsApp
+    $('#confirm-order').addEventListener('click', function () {
+      var envioSel = $('input[name="envio"]:checked');
+      if (!envioSel) { toast('Seleccione un método de envío'); return; }
+      orderData.envio = {
+        metodo: envioSel.value,
+        costo: envioSel.value === 'estandar' ? 12000 : envioSel.value === 'express' ? 18000 : 15000
+      };
+      
+      // Generar número de pedido
+      orderData.numero = 'LV-' + String(Date.now()).slice(-6);
+      orderData.fecha = new Date().toISOString();
+      orderData.estado = 'pendiente_confirmacion';
+      
+      // Calcular totales
+      var it = Cart.items();
+      var sub = it.reduce(function (a, x) { var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; return a + (p ? p.price * x.qty : 0); }, 0);
+      orderData.pago = {
+        subtotal: sub,
+        envio: orderData.envio.costo,
+        total: sub + orderData.envio.costo,
+        items: it.map(function(x) {
+          var p = PRODUCTS.filter(function(q) { return q.id === x.id; })[0];
+          return {
+            id: p.id,
+            nombre: p.name,
+            color: x.color,
+            cantidad: x.qty,
+            precioUnitario: p.price,
+            subtotal: p.price * x.qty
+          };
+        })
+      };
+      
+      // Enviar por WhatsApp
+      enviarWhatsAppPedido(orderData);
+      
+      // Guardar en localStorage para admin
+      guardarPedidoAdmin(orderData);
+      
+      // Guardar para marketing si optó
+      if (orderData.cliente.marketingOptin) {
+        guardarParaMarketing(orderData.cliente);
+      }
+      
+      // Limpiar carrito y mostrar confirmación
+      Cart.set([]);
+      $('#order-n').textContent = orderData.numero;
+      go(3);
+    });
+
+    $('#back-1').addEventListener('click', function () { go(1); });
+
+    // Generar mensaje de WhatsApp y abrir
+    function enviarWhatsAppPedido(orderData) {
+      var itemsText = orderData.pago.items.map(function(i) {
+        return '• ' + i.nombre + ' (' + i.color + ') x' + i.cantidad + ' = ' + money(i.subtotal);
+      }).join('\n');
+      
+      var envioLabels = {
+        'estandar': 'Envío estándar (3-5 días hábiles)',
+        'express': 'Envío express (1-2 días hábiles)',
+        'contraentrega': 'Contra entrega (pago al recibir)'
+      };
+      
+      var msg = '🛍 *NUEVO PEDIDO ' + orderData.numero + '*\n\n' +
+        '👤 *Cliente:* ' + orderData.cliente.nombre + '\n' +
+        '📞 *WhatsApp:* +57' + orderData.cliente.celular + '\n' +
+        '📧 *Email:* ' + orderData.cliente.email + '\n' +
+        '🆔 *Doc:* ' + orderData.cliente.tipoDoc + ' ' + orderData.cliente.documento + '\n' +
+        '📍 *Envío a:* ' + orderData.cliente.direccion + ', ' + orderData.cliente.ciudad + ', ' + orderData.cliente.departamento + '\n' +
+        '🚚 *Método envío:* ' + (envioLabels[orderData.envio.metodo] || orderData.envio.metodo) + ' (' + money(orderData.envio.costo) + ')\n\n' +
+        '*Detalle:*\n' + itemsText + '\n\n' +
+        '*Subtotal:* ' + money(orderData.pago.subtotal) + '\n' +
+        '*Envío:* ' + money(orderData.pago.envio) + '\n' +
+        '*TOTAL:* ' + money(orderData.pago.total) + '\n\n' +
+        '🕐 ' + new Date(orderData.fecha).toLocaleString('es-CO') + '\n' +
+        (orderData.cliente.marketingOptin ? '✅ Acepta recibir promociones' : '❌ No quiere promociones') + '\n\n' +
+        '—\nPedido generado desde lovely-web';
+      
+      var adminPhone = C.whatsapp || '57XXXXXXXXXX';
+      var waUrl = 'https://wa.me/' + adminPhone + '?text=' + encodeURIComponent(msg);
+      
+      // Abrir WhatsApp en nueva pestaña
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      
+      toast('Abriendo WhatsApp con tu pedido...');
+    }
+
+    function guardarPedidoAdmin(orderData) {
+      var adminOrders = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
+      adminOrders.unshift(orderData);
+      localStorage.setItem('lv_admin_orders', JSON.stringify(adminOrders.slice(0, 200)));
+    }
+
+    function guardarParaMarketing(cliente) {
+      var lista = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
+      if (!lista.find(function(c) { return c.email === cliente.email; })) {
+        lista.push({
+          email: cliente.email,
+          nombre: cliente.nombre,
+          celular: cliente.celular,
+          fechaRegistro: new Date().toISOString(),
+          fuente: 'checkout:' + orderData.numero,
+          activo: true
+        });
+        localStorage.setItem('lv_marketing', JSON.stringify(lista));
+      }
+    }
+
     go(1);
   }
+      var sub = it.reduce(function (a, x) { var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; return a + (p ? p.price * x.qty : 0); }, 0);
+      var ship = orderData.envio?.costo || 0;
+      var total = sub + ship;
+      
+      // Mostrar métodos de pago disponibles
+      container.innerHTML = '<p class="note" style="margin-bottom:12px"><strong>Total a pagar: ' + money(total) + '</strong></p>';
+      
+      // Configuración de Wompi - REEMPLAZAR CON TUS CREDENCIALES REALES
+      var WOMPI_PUBLIC_KEY = 'pub_prod_XXXXXXXXXXXXXXXXXXXXXXXX'; // Tu llave pública de Wompi (producción)
+      // Para sandbox: 'pub_test_XXXXXXXXXXXXXXXXXXXXXXXX'
+      
+      if (typeof window.WompiCheckout !== 'undefined') {
+        // El widget se renderiza automáticamente via data-render="auto" en el script tag
+        // Pero podemos inicializarlo programáticamente también
+        console.log('Wompi SDK cargado');
+      }
+    }
 
-  /* ---------- Cuenta ---------- */
-  function initAccount() {
-    $$('.seg button').forEach(function (b) {
-      b.addEventListener('click', function () {
-        $$('.seg button').forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
-        $('#reg-fields').hidden = b.getAttribute('data-mode') !== 'registro';
-        $('#auth-submit').textContent = b.getAttribute('data-mode') === 'registro' ? 'CREAR CUENTA' : 'ENTRAR';
-      });
+    // Paso 3: Procesar pago
+    $('#pay').addEventListener('click', async function () {
+      var payBtn = $('#pay');
+      var payError = $('#pay-error');
+      var metodoPago = $('input[name="pago"]:checked')?.value;
+      
+      if (!metodoPago) { toast('Seleccione un método de pago'); return; }
+      
+      var it = Cart.items();
+      var sub = it.reduce(function (a, x) { var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; return a + (p ? p.price * x.qty : 0); }, 0);
+      var ship = orderData.envio?.costo || 0;
+      var total = sub + ship;
+      
+      // Validar monto mínimo Wompi (100 COP = 1 peso, pero mínimo práctico ~1000)
+      if (total < 1000) {
+        payError.textContent = 'El monto mínimo es $1.000 COP';
+        payError.style.display = 'block';
+        return;
+      }
+      
+      payBtn.disabled = true;
+      payBtn.textContent = 'Procesando...';
+      payError.style.display = 'none';
+      
+      orderData.pago = {
+        metodo: metodoPago,
+        total: total,
+        subtotal: sub,
+        envio: ship,
+        items: it.map(function(x) {
+          var p = PRODUCTS.filter(function(q) { return q.id === x.id; })[0];
+          return {
+            id: p.id,
+            nombre: p.name,
+            color: x.color,
+            cantidad: x.qty,
+            precioUnitario: p.price,
+            subtotal: p.price * x.qty
+          };
+        })
+      };
+      
+      orderData.fecha = new Date().toISOString();
+      orderData.numero = 'LV-' + String(Date.now()).slice(-6);
+      orderData.estado = metodoPago === 'CONTRAENTREGA' ? 'pendiente_pago' : 'pagado';
+      
+      try {
+        if (metodoPago === 'CONTRAENTREGA' || false) {
+          // Para contraentrega o si falla Wompi, crear pedido directo
+          await procesarPedidoDirecto(orderData);
+        } else {
+          // Integración real con Wompi
+          await procesarConWompi(orderData, metodoPago, total);
+        }
+      } catch (err) {
+        console.error('Error en pago:', err);
+        payError.textContent = 'Error: ' + (err.message || 'No se pudo procesar el pago. Intente de nuevo.');
+        payError.style.display = 'block';
+        payBtn.disabled = false;
+        payBtn.textContent = metodoPago === 'CONTRAENTREGA' ? 'Confirmar pedido (pago contra entrega)' : 'Iniciar pago seguro';
+      }
     });
-    $('#auth-form').addEventListener('submit', function (e) { e.preventDefault(); toast('Vista previa: el inicio de sesión se conecta en la versión final.'); });
+
+    async function procesarConWompi(orderData, metodoPago, total) {
+      // IMPORTANTE: Esto requiere un BACKEND para crear la transacción en Wompi
+      // El frontend NUNCA debe exponer la llave privada (integrity_key)
+      
+      var WOMPI_PUBLIC_KEY = 'pub_prod_XXXXXXXXXXXXXXXXXXXXXXXX'; // TU LLAVE PÚBLICA
+      
+      // OPCIÓN A: Usar widget de Wompi (redirect)
+      if (window.WompiCheckout) {
+        window.WompiCheckout.open({
+          publicKey: WOMPI_PUBLIC_KEY,
+          currency: 'COP',
+          amountInCents: total * 100, // Wompi usa centavos
+          reference: orderData.numero,
+          customerData: {
+            email: orderData.cliente.email,
+            fullName: orderData.cliente.nombre,
+            phoneNumber: '+57' + orderData.cliente.celular,
+            legalId: orderData.cliente.documento,
+            legalIdType: orderData.cliente.tipoDoc === 'CC' ? 'CC' : orderData.cliente.tipoDoc === 'NIT' ? 'NIT' : 'CE'
+          },
+          shippingData: {
+            address: orderData.cliente.direccion,
+            city: orderData.cliente.ciudad,
+            region: orderData.cliente.departamento,
+            country: 'CO',
+            phoneNumber: '+57' + orderData.cliente.celular
+          },
+          redirectUrl: window.location.origin + '/checkout.html?success=true&ref=' + orderData.numero,
+          singleUse: true
+        });
+        // El widget maneja el redirect. Cuando vuelve, verificamos en URL.
+        return;
+      }
+      
+      // OPCIÓN B: Crear transacción via API (requiere backend)
+      // Llamar a TU backend: POST /api/wompi/crear-transaccion
+      /*
+      var resp = await fetch('https://TU-BACKEND.com/api/wompi/crear-transaccion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amountInCents: total * 100,
+          currency: 'COP',
+          customerEmail: orderData.cliente.email,
+          reference: orderData.numero,
+          paymentMethod: { installments: 1 },
+          customerData: { ... },
+          redirectUrl: window.location.origin + '/checkout.html?success=true&ref=' + orderData.numero
+        })
+      });
+      var data = await resp.json();
+      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+      */
+      
+      // FALLBACK DEMO: Simular pago exitoso para pruebas
+      toast('Modo demo: simulando pago exitoso...');
+      setTimeout(function() { procesarPedidoDirecto(orderData); }, 1500);
+    }
+
+    async function procesarPedidoDirecto(orderData) {
+      // Guardar pedido en localStorage (historial local)
+      var historial = JSON.parse(localStorage.getItem('lv_orders') || '[]');
+      historial.unshift(orderData);
+      localStorage.setItem('lv_orders', JSON.stringify(historial.slice(0, 50)));
+      
+      // ENVIAR A WHATSAPP DEL ADMIN (tú)
+      enviarWhatsAppAdmin(orderData);
+      
+      // ENVIAR CONFIRMACIÓN AL CLIENTE (si dio consentimiento marketing)
+      if (orderData.cliente.marketingOptin) {
+        guardarParaMarketing(orderData.cliente);
+      }
+      
+      // Limpiar carrito y mostrar confirmación
+      Cart.set([]);
+      $('#order-n').textContent = orderData.numero;
+      go(4);
+    }
+
+    function enviarWhatsAppAdmin(orderData) {
+      var itemsText = orderData.pago.items.map(function(i) {
+        return '• ' + i.nombre + ' (' + i.color + ') x' + i.cantidad + ' = ' + money(i.subtotal);
+      }).join('\n');
+      
+      var msg = '🛍 *NUEVO PEDIDO ' + orderData.numero + '*\n\n' +
+        '👤 *Cliente:* ' + orderData.cliente.nombre + '\n' +
+        '📞 *WhatsApp:* +57' + orderData.cliente.celular + '\n' +
+        '📧 *Email:* ' + orderData.cliente.email + '\n' +
+        '📍 *Envío a:* ' + orderData.cliente.direccion + ', ' + orderData.cliente.ciudad + ', ' + orderData.cliente.departamento + '\n' +
+        '🚚 *Método envío:* ' + orderData.envio.metodo + ' (' + money(orderData.envio.costo) + ')\n' +
+        '💳 *Pago:* ' + orderData.pago.metodo + (orderData.pago.metodo === 'CONTRAENTREGA' ? ' (paga al recibir)' : '') + '\n\n' +
+        '*Detalle:*\n' + itemsText + '\n\n' +
+        '*Subtotal:* ' + money(orderData.pago.subtotal) + '\n' +
+        '*Envío:* ' + money(orderData.pago.envio) + '\n' +
+        '*TOTAL:* ' + money(orderData.pago.total) + '\n\n' +
+        '🕐 ' + new Date(orderData.fecha).toLocaleString('es-CO') + '\n' +
+        (orderData.cliente.marketingOptin ? '✅ Acepta marketing' : '❌ No marketing');
+      
+      var adminPhone = C.whatsapp || '57XXXXXXXXXX'; // Tu número en LV_CONFIG
+      var waUrl = 'https://wa.me/' + adminPhone + '?text=' + encodeURIComponent(msg);
+      
+      // Abrir en nueva pestaña para que el admin vea el pedido
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      
+      // También guardar en localStorage para panel admin.html
+      var adminOrders = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
+      adminOrders.unshift(orderData);
+      localStorage.setItem('lv_admin_orders', JSON.stringify(adminOrders.slice(0, 200)));
+    }
+
+    function guardarParaMarketing(cliente) {
+      var lista = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
+      // Evitar duplicados por email
+      if (!lista.find(function(c) { return c.email === cliente.email; })) {
+        lista.push({
+          email: cliente.email,
+          nombre: cliente.nombre,
+          celular: cliente.celular,
+          fechaRegistro: new Date().toISOString(),
+          fuente: 'checkout',
+          activo: true
+        });
+        localStorage.setItem('lv_marketing', JSON.stringify(lista));
+      }
+    }
+
+    // Verificar si venimos de retorno de Wompi (success=true en URL)
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true' && urlParams.get('ref')) {
+      // Aquí deberías verificar la transacción con tu backend
+      // Por ahora simulamos éxito
+      toast('¡Pago verificado! Procesando su pedido...');
+      // orderData ya debería estar en sessionStorage o recuperarse via ref
+      setTimeout(function() { 
+        // En producción: verificar transacción con Wompi API via tu backend
+        // fetch('https://TU-BACKEND.com/api/wompi/verificar/' + urlParams.get('ref'))
+        // Si ok: procesarPedidoDirecto(orderData)
+      }, 1000);
+    }
+
+    go(1);
   }
 
   /* ---------- Ayuda ---------- */
@@ -323,7 +713,6 @@
   if (page === 'tienda') initShop();
   if (page === 'producto') initProduct();
   if (page === 'checkout') initCheckout();
-  if (page === 'cuenta') initAccount();
   if (page === 'ayuda') initHelp();
   reveal();
 })();

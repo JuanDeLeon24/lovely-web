@@ -298,10 +298,651 @@
     S.cats.push({ slug: s, name: name, icon: 'accesorio', cover: '' }); setDirty(true); renderCats(); renderFilters();
   });
 
+  /* ---------- FAQs ---------- */
+  function renderFaqs() {
+    var box = $('#list-faqs');
+    var catFiltro = $('#f-faq-cat').value;
+    
+    var faqs = (S.faqs || []).slice().sort(function(a, b) { return (a.orden || 0) - (b.orden || 0); });
+    if (catFiltro) faqs = faqs.filter(function(f) { return f.categoria === catFiltro; });
+    
+    $('#count-faqs').textContent = faqs.length + ' pregunta(s)';
+    
+    if (!faqs.length) {
+      box.innerHTML = '<p class="muted" style="text-align:center;padding:32px">No hay FAQs' + (catFiltro ? ' en esta categoría' : '') + '.</p>';
+      return;
+    }
+    
+    var catLabels = { pagos: '💳 Pagos', envios: '🚚 Envíos', garantias: '🛡️ Garantías', cambios: '🔄 Cambios' };
+    
+    box.innerHTML = faqs.map(function(f, idx) {
+      return '<div class="prow" data-id="' + idx + '">' +
+        '<div class="pcol p-num">' + (idx + 1) + '</div>' +
+        '<div class="pcol p-fecha" style="flex:0 0 100px"><span class="estado estado-pagado" style="font-size:10px;padding:2px 8px">' + (catLabels[f.categoria] || f.categoria) + '</span></div>' +
+        '<div class="pcol p-cliente" style="flex:2"><strong>' + esc(f.pregunta) + '</strong></div>' +
+        '<div class="pcol p-items" style="flex:3">' + esc(f.respuesta).replace(/<[^>]+>/g, '').slice(0, 80) + '…</div>' +
+        '<div class="pcol p-acciones">' +
+          '<button class="btn btn-ghost-dark btn-sm edit-faq" data-idx="' + idx + '">Editar</button>' +
+          '<button class="btn btn-danger btn-sm del-faq" data-idx="' + idx + '">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    
+    $$('.edit-faq', box).forEach(function(btn) {
+      btn.addEventListener('click', function() { openFaqEditor(+btn.getAttribute('data-idx')); });
+    });
+    $$('.del-faq', box).forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = +btn.getAttribute('data-idx');
+        if (confirm('¿Eliminar esta FAQ?')) {
+          S.faqs.splice(idx, 1);
+          setDirty(true); renderFaqs();
+        }
+      });
+    });
+  }
+  
+  function openFaqEditor(idx) {
+    var f = (S.faqs || [])[idx];
+    var isNew = idx === null || idx === undefined;
+    var html = '<form id="faq-form" class="form-grid" novalidate>' +
+      '<input type="hidden" name="faqIdx" value="' + (isNew ? '-1' : idx) + '">' +
+      '<label class="span2">Categoría<select name="categoria" required>' +
+        '<option value="pagos"' + (f && f.categoria === 'pagos' ? ' selected' : '') + '>💳 Pagos</option>' +
+        '<option value="envios"' + (f && f.categoria === 'envios' ? ' selected' : '') + '>🚚 Envíos</option>' +
+        '<option value="garantias"' + (f && f.categoria === 'garantias' ? ' selected' : '') + '>🛡️ Garantías</option>' +
+        '<option value="cambios"' + (f && f.categoria === 'cambios' ? ' selected' : '') + '>🔄 Cambios</option>' +
+      '</select></label>' +
+      '<label class="span2">Orden (número)<input name="orden" type="number" min="1" value="' + (f ? f.orden : (S.faqs ? S.faqs.length + 1 : 1)) + '"></label>' +
+      '<label class="span2">Pregunta<input name="pregunta" required value="' + esc(f ? f.pregunta : '') + '"></label>' +
+      '<label class="span2">Respuesta (HTML permitido)<textarea name="respuesta" rows="4" required>' + (f ? f.respuesta : '') + '</textarea></label>' +
+    '</form>';
+    
+    $('#ed-title').textContent = isNew ? 'Nueva FAQ' : 'Editar FAQ';
+    $('#ed-body').innerHTML = html;
+    $('#ed-error').hidden = true;
+    $('#ed-delete').hidden = isNew;
+    $('#ed-delete').onclick = function() {
+      if (confirm('¿Eliminar esta FAQ?')) {
+        S.faqs.splice(idx, 1);
+        setDirty(true); renderFaqs(); closeEditor();
+      }
+    };
+    $('#ed-form').onsubmit = function(e) {
+      e.preventDefault();
+      var form = e.target;
+      var data = {
+        categoria: form.categoria.value,
+        orden: +form.orden.value,
+        pregunta: form.pregunta.value.trim(),
+        respuesta: form.respuesta.value.trim()
+      };
+      if (!data.pregunta || !data.respuesta) return toast('Completa todos los campos');
+      if (!S.faqs) S.faqs = [];
+      if (isNew) S.faqs.push(data); else S.faqs[idx] = data;
+      setDirty(true); renderFaqs(); closeEditor(); toast('FAQ guardada');
+    };
+    $('#editor').showModal();
+  }
+  
+  $('#f-faq-cat').addEventListener('change', renderFaqs);
+  $('#new-faq').addEventListener('click', function() { openFaqEditor(null); });
+
+  /* ---------- Descuentos ---------- */
+  function renderDescuentos() {
+    var box = $('#list-desc');
+    var q = ($('#q-desc').value || '').toLowerCase();
+    var activoFiltro = $('#f-desc-activo').value;
+    
+    var descs = (S.discounts || []).slice();
+    if (q) descs = descs.filter(function(d) {
+      return (d.codigo && d.codigo.toLowerCase().includes(q)) ||
+             (d.descripcion && d.descripcion.toLowerCase().includes(q));
+    });
+    if (activoFiltro !== '') descs = descs.filter(function(d) { return String(d.activo) === activoFiltro; });
+    
+    $('#count-desc').textContent = descs.length + ' descuento(s)';
+    
+    if (!descs.length) {
+      box.innerHTML = '<p class="muted" style="text-align:center;padding:32px">No hay descuentos' + (q || activoFiltro ? ' con ese filtro' : '') + '.</p>';
+      return;
+    }
+    
+    var tipoLabels = { porcentaje: '%', monto: '$', envio_gratis: '🚚 Envío gratis' };
+    
+    box.innerHTML = descs.map(function(d, idx) {
+      var valorStr = d.tipo === 'porcentaje' ? d.valor + '%' : d.tipo === 'monto' ? money(d.valor) : 'Gratis';
+      var estadoClass = d.activo ? 'estado-pagado' : 'estado-cancelado';
+      var estadoLabel = d.activo ? '✅ Activo' : '❌ Inactivo';
+      return '<div class="prow" data-id="' + idx + '">' +
+        '<div class="pcol p-num">' + (d.codigo || '—') + '</div>' +
+        '<div class="pcol p-fecha" style="flex:0 0 100px"><span class="estado ' + estadoClass + '" style="font-size:10px;padding:2px 8px">' + estadoLabel + '</span></div>' +
+        '<div class="pcol p-cliente" style="flex:2"><strong>' + esc(d.descripcion) + '</strong><br><small>Tipo: ' + (tipoLabels[d.tipo] || d.tipo) + ' · Valor: ' + valorStr + '</small></div>' +
+        '<div class="pcol p-items" style="flex:2"><small>Mín: ' + money(d.minCompra || 0) + ' · ' + (d.fechaInicio ? new Date(d.fechaInicio).toLocaleDateString('es-CO') : '—') + ' a ' + (d.fechaFin ? new Date(d.fechaFin).toLocaleDateString('es-CO') : '—') + '</small></div>' +
+        '<div class="pcol p-acciones">' +
+          '<button class="btn btn-ghost-dark btn-sm edit-desc" data-idx="' + idx + '">Editar</button>' +
+          '<button class="btn btn-danger btn-sm del-desc" data-idx="' + idx + '">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    
+    $$('.edit-desc', box).forEach(function(btn) { btn.addEventListener('click', function() { openDescEditor(+btn.getAttribute('data-idx')); }); });
+    $$('.del-desc', box).forEach(function(btn) { btn.addEventListener('click', function() { var idx = +btn.getAttribute('data-idx'); if (confirm('¿Eliminar este descuento?')) { S.discounts.splice(idx, 1); setDirty(true); renderDescuentos(); } }); });
+  }
+  
+  function openDescEditor(idx) {
+    var d = (S.discounts || [])[idx];
+    var isNew = idx === null || idx === undefined;
+    var today = new Date().toISOString().slice(0, 10);
+    var html = '<form id="desc-form" class="form-grid" novalidate>' +
+      '<input type="hidden" name="descIdx" value="' + (isNew ? '-1' : idx) + '">' +
+      '<label class="span2">ID interno<input name="id" required pattern="[a-z0-9-]+" value="' + esc(d ? d.id : '') + '"' + (isNew ? '' : ' readonly') + '><small>Solo minúsculas, números y guiones. No editable después.</small></label>' +
+      '<label>Código (opcional)<input name="codigo" value="' + esc(d ? d.codigo : '') + '" placeholder="WELCOME10"><small>Dejar vacío si es automático (ej. envío gratis por monto)</small></label>' +
+      '<label>Tipo<select name="tipo" required>' +
+        '<option value="porcentaje"' + (d && d.tipo === 'porcentaje' ? ' selected' : '') + '>Porcentaje (%)</option>' +
+        '<option value="monto"' + (d && d.tipo === 'monto' ? ' selected' : '') + '>Monto fijo ($)</option>' +
+        '<option value="envio_gratis"' + (d && d.tipo === 'envio_gratis' ? ' selected' : '') + '>Envío gratis</option>' +
+      '</select></label>' +
+      '<label>Valor<input name="valor" type="number" min="0" step="0.01" value="' + (d ? d.valor : 0) + '"><small>Para %: 10 = 10%. Para $: 50000 = $50.000. Para envío gratis: 0.</small></label>' +
+      '<label class="span2">Descripción<input name="descripcion" required value="' + esc(d ? d.descripcion : '') + '"></label>' +
+      '<label>Compra mínima<input name="minCompra" type="number" min="0" step="100" value="' + (d ? d.minCompra : 0) + '"></label>' +
+      '<label>Aplica a<select name="aplicaA">' +
+        '<option value="todo"' + (d && d.aplicaA === 'todo' ? ' selected' : '') + '>Todo el catálogo</option>' +
+        '<option value="relojes"' + (d && d.aplicaA === 'relojes' ? ' selected' : '') + '>Solo relojes</option>' +
+        '<option value="gorras"' + (d && d.aplicaA === 'gorras' ? ' selected' : '') + '>Solo gorras</option>' +
+        '<option value="gafas"' + (d && d.aplicaA === 'gafas' ? ' selected' : '') + '>Solo gafas</option>' +
+      '</select></label>' +
+      '<label>Fecha inicio<input name="fechaInicio" type="date" value="' + (d ? d.fechaInicio : today) + '"></label>' +
+      '<label>Fecha fin<input name="fechaFin" type="date" value="' + (d ? d.fechaFin : '2027-12-31') + '"></label>' +
+      '<label class="check"><input name="activo" type="checkbox" ' + (d ? d.activo : true) + '> Activo</label>' +
+    '</form>';
+    
+    $('#ed-title').textContent = isNew ? 'Nuevo descuento' : 'Editar descuento';
+    $('#ed-body').innerHTML = html;
+    $('#ed-error').hidden = true;
+    $('#ed-delete').hidden = isNew;
+    $('#ed-delete').onclick = function() { if (confirm('¿Eliminar?')) { S.discounts.splice(idx, 1); setDirty(true); renderDescuentos(); closeEditor(); } };
+    $('#ed-form').onsubmit = function(e) {
+      e.preventDefault();
+      var form = e.target;
+      var data = {
+        id: form.id.value.trim(),
+        codigo: form.codigo.value.trim() || null,
+        tipo: form.tipo.value,
+        valor: +form.valor.value,
+        descripcion: form.descripcion.value.trim(),
+        minCompra: +form.minCompra.value,
+        aplicaA: form.aplicaA.value,
+        fechaInicio: form.fechaInicio.value,
+        fechaFin: form.fechaFin.value,
+        activo: form.activo.checked,
+        usosMax: d ? d.usosMax : (form.codigo.value ? 1 : null),
+        usosActuales: d ? d.usosActuales : 0
+      };
+      if (!data.id && isNew) return toast('ID requerido');
+      if (!data.descripcion) return toast('Descripción requerida');
+      if (!S.discounts) S.discounts = [];
+      if (isNew) S.discounts.push(data); else S.discounts[idx] = data;
+      setDirty(true); renderDescuentos(); closeEditor(); toast('Descuento guardado');
+    };
+    $('#editor').showModal();
+  }
+  
+  $('#q-desc').addEventListener('input', renderDescuentos);
+  $('#f-desc-activo').addEventListener('change', renderDescuentos);
+  $('#new-desc').addEventListener('click', function() { openDescEditor(null); });
+
+  /* ---------- Páginas ---------- */
+  function renderPageEditor() {
+    var page = $('#page-select').value;
+    var p = (S.pages || {})[page] || {};
+    var box = $('#page-editor');
+    
+    if (page === 'index') {
+      box.innerHTML = '<h2>Página de Inicio</h2>' +
+        '<label class="span2">Hero - Título<input name="hero.titulo" value="' + esc(p.hero?.titulo || '') + '"></label>' +
+        '<label class="span2">Hero - Subtítulo<textarea name="hero.subtitulo" rows="3">' + esc(p.hero?.subtitulo || '') + '</textarea></label>' +
+        '<label>Hero - Texto botón<input name="hero.btnTexto" value="' + esc(p.hero?.btnTexto || '') + '"></label>' +
+        '<label>Hero - Link botón<input name="hero.btnLink" value="' + esc(p.hero?.btnLink || '') + '"></label>' +
+        '<label>Hero - Imagen<input name="hero.imagen" value="' + esc(p.hero?.imagen || '') + '"></label>' +
+        '<h3>Estadísticas</h3><div id="stats-editor"></div>' +
+        '<button type="button" id="add-stat" class="btn btn-outline">+ Estadística</button>' +
+        '<h3>Promo principal</h3>' +
+        '<label class="span2">Título<input name="promo.titulo" value="' + esc(p.promo?.titulo || '') + '"></label>' +
+        '<label class="span2">Subtítulo<textarea name="promo.subtitulo" rows="2">' + esc(p.promo?.subtitulo || '') + '</textarea></label>' +
+        '<label>Imagen<input name="promo.imagen" value="' + esc(p.promo?.imagen || '') + '"></label>' +
+        '<label>Texto botón<input name="promo.btnTexto" value="' + esc(p.promo?.btnTexto || '') + '"></label>' +
+        '<label>Link botón<input name="promo.btnLink" value="' + esc(p.promo?.btnLink || '') + '"></label>';
+      
+      // Render stats
+      setTimeout(function() {
+        var statsBox = $('#stats-editor');
+        var stats = p.stats || [];
+        statsBox.innerHTML = stats.map(function(s, i) {
+          return '<div class="crow" style="grid-template-columns:1fr 1fr 1fr auto;align-items:center;padding:10px;border:1px solid var(--divisor);margin-bottom:8px">' +
+            '<div class="fields" style="flex:1"><label class="field">Icono<input name="stats[' + i + '].icon" value="' + esc(s.icon || '') + '" placeholder="📦"></label></div>' +
+            '<div class="fields" style="flex:1"><label class="field">Número<input name="stats[' + i + '].numero" value="' + esc(s.numero || '') + '" placeholder="1.000+"></label></div>' +
+            '<div class="fields" style="flex:1"><label class="field">Label<input name="stats[' + i + '].label" value="' + esc(s.label || '') + '" placeholder="Clientes felices"></label></div>' +
+            '<div class="acts"><button type="button" class="btn btn-danger btn-sm del-stat" data-i="' + i + '">Eliminar</button></div>' +
+          '</div>';
+        }).join('');
+        $$('.del-stat', statsBox).forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var i = +btn.getAttribute('data-i');
+            stats.splice(i, 1);
+            p.stats = stats;
+            S.pages.index = p;
+            setDirty(true); renderPageEditor();
+          });
+        });
+        $('#add-stat').addEventListener('click', function() {
+          if (!p.stats) p.stats = [];
+          p.stats.push({ icon: '', numero: '', label: '' });
+          S.pages.index = p;
+          setDirty(true); renderPageEditor();
+        });
+      }, 0);
+    }
+    else if (page === 'nosotros') {
+      box.innerHTML = '<h2>Página Nosotros</h2>' +
+        '<label class="span2">Hero - Título<input name="hero.titulo" value="' + esc(p.hero?.titulo || '') + '"></label>' +
+        '<label class="span2">Hero - Subtítulo<textarea name="hero.subtitulo" rows="2">' + esc(p.hero?.subtitulo || '') + '</textarea></label>' +
+        '<label>Hero - Imagen<input name="hero.imagen" value="' + esc(p.hero?.imagen || '') + '"></label>' +
+        '<h3>Historia</h3>' +
+        '<label class="span2">Texto<textarea name="historia" rows="5">' + esc(p.historia || '') + '</textarea></label>' +
+        '<h3>Valores</h3><div id="valores-editor"></div>' +
+        '<button type="button" id="add-valor" class="btn btn-outline">+ Valor</button>' +
+        '<h3>Equipo</h3><div id="equipo-editor"></div>' +
+        '<button type="button" id="add-equipo" class="btn btn-outline">+ Miembro</button>';
+      
+      setTimeout(function() {
+        // Valores
+        var valBox = $('#valores-editor');
+        var valores = p.valores || [];
+        valBox.innerHTML = valores.map(function(v, i) {
+          return '<div class="crow" style="grid-template-columns:1fr 1fr 1fr auto;align-items:center;padding:10px;border:1px solid var(--divisor);margin-bottom:8px">' +
+            '<div class="fields" style="flex:1"><label class="field">Icono<input name="valores[' + i + '].icon" value="' + esc(v.icon || '') + '" placeholder="✨"></label></div>' +
+            '<div class="fields" style="flex:1"><label class="field">Título<input name="valores[' + i + '].titulo" value="' + esc(v.titulo || '') + '"></label></div>' +
+            '<div class="fields" style="flex:2"><label class="field">Texto<textarea name="valores[' + i + '].texto" rows="2">' + esc(v.texto || '') + '</textarea></label></div>' +
+            '<div class="acts"><button type="button" class="btn btn-danger btn-sm del-valor" data-i="' + i + '">Eliminar</button></div>' +
+          '</div>';
+        }).join('');
+        $$('.del-valor', valBox).forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var i = +btn.getAttribute('data-i');
+            valores.splice(i, 1);
+            p.valores = valores;
+            S.pages.nosotros = p;
+            setDirty(true); renderPageEditor();
+          });
+        });
+        $('#add-valor').addEventListener('click', function() {
+          if (!p.valores) p.valores = [];
+          p.valores.push({ icon: '', titulo: '', texto: '' });
+          S.pages.nosotros = p;
+          setDirty(true); renderPageEditor();
+        });
+        
+        // Equipo
+        var eqBox = $('#equipo-editor');
+        var equipo = p.equipo || [];
+        eqBox.innerHTML = equipo.map(function(e, i) {
+          return '<div class="crow" style="grid-template-columns:1fr 1fr 1fr auto;align-items:center;padding:10px;border:1px solid var(--divisor);margin-bottom:8px">' +
+            '<div class="fields" style="flex:1"><label class="field">Nombre<input name="equipo[' + i + '].nombre" value="' + esc(e.nombre || '') + '"></label></div>' +
+            '<div class="fields" style="flex:1"><label class="field">Rol<input name="equipo[' + i + '].rol" value="' + esc(e.rol || '') + '"></label></div>' +
+            '<div class="fields" style="flex:1"><label class="field">Foto<input name="equipo[' + i + '].foto" value="' + esc(e.foto || '') + '"></label></div>' +
+            '<div class="acts"><button type="button" class="btn btn-danger btn-sm del-equipo" data-i="' + i + '">Eliminar</button></div>' +
+          '</div>';
+        }).join('');
+        $$('.del-equipo', eqBox).forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var i = +btn.getAttribute('data-i');
+            equipo.splice(i, 1);
+            p.equipo = equipo;
+            S.pages.nosotros = p;
+            setDirty(true); renderPageEditor();
+          });
+        });
+        $('#add-equipo').addEventListener('click', function() {
+          if (!p.equipo) p.equipo = [];
+          p.equipo.push({ nombre: '', rol: '', foto: '' });
+          S.pages.nosotros = p;
+          setDirty(true); renderPageEditor();
+        });
+      }, 0);
+    }
+    else if (page === 'contacto') {
+      box.innerHTML = '<h2>Página Contacto</h2>' +
+        '<label class="span2">Hero - Título<input name="hero.titulo" value="' + esc(p.hero?.titulo || '') + '"></label>' +
+        '<label class="span2">Hero - Subtítulo<textarea name="hero.subtitulo" rows="2">' + esc(p.hero?.subtitulo || '') + '</textarea></label>' +
+        '<label>Horario<input name="horario" value="' + esc(p.horario || '') + '"></label>' +
+        '<label>Dirección<input name="direccion" value="' + esc(p.direccion || '') + '"></label>' +
+        '<label>Email<input name="email" type="email" value="' + esc(p.email || '') + '"></label>';
+    }
+    
+    // Guardar cambios en inputs
+    setTimeout(function() {
+      $$('input, textarea, select', box).forEach(function(el) {
+        el.addEventListener('change', function() {
+          var name = el.name;
+          var value = el.type === 'checkbox' ? el.checked : el.value;
+          setNested(S.pages[page], name, value);
+          setDirty(true);
+        });
+      });
+    }, 0);
+  }
+  
+  function setNested(obj, path, value) {
+    var keys = path.split('[').map(function(k) { return k.replace(']', ''); });
+    var o = obj;
+    for (var i = 0; i < keys.length - 1; i++) {
+      var k = keys[i];
+      if (!o[k]) o[k] = /^\d+$/.test(keys[i+1]) ? [] : {};
+      o = o[k];
+    }
+    o[keys[keys.length - 1]] = value;
+  }
+  
+  $('#page-select').addEventListener('change', renderPageEditor);
+
+  /* ---------- Promociones ---------- */
+  function renderPromociones() {
+    var box = $('#list-promos');
+    var promos = S.cfg?.promociones || [];
+    
+    $('#count-promos').textContent = promos.length + ' promoción(es)';
+    
+    if (!promos.length) {
+      box.innerHTML = '<p class="muted" style="text-align:center;padding:32px">No hay promociones activas.</p>';
+      return;
+    }
+    
+    box.innerHTML = promos.map(function(p, idx) {
+      var tipoLabels = { banner: '📢 Banner superior', popup: '🪟 Popup' };
+      var estadoClass = p.activo ? 'estado-pagado' : 'estado-cancelado';
+      var estadoLabel = p.activo ? '✅ Activo' : '❌ Inactivo';
+      return '<div class="prow" data-id="' + idx + '">' +
+        '<div class="pcol p-num">' + esc(p.id) + '</div>' +
+        '<div class="pcol p-fecha" style="flex:0 0 120px"><span class="estado ' + estadoClass + '" style="font-size:10px;padding:2px 8px">' + estadoLabel + '</span></div>' +
+        '<div class="pcol p-cliente" style="flex:2"><strong>' + esc(p.titulo) + '</strong><br><small>' + (tipoLabels[p.tipo] || p.tipo) + '</small></div>' +
+        '<div class="pcol p-items" style="flex:2">' + esc(p.texto) + '</div>' +
+        '<div class="pcol p-acciones">' +
+          '<button class="btn btn-ghost-dark btn-sm edit-promo" data-idx="' + idx + '">Editar</button>' +
+          '<button class="btn btn-danger btn-sm del-promo" data-idx="' + idx + '">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    
+    $$('.edit-promo', box).forEach(function(btn) { btn.addEventListener('click', function() { openPromoEditor(+btn.getAttribute('data-idx')); }); });
+    $$('.del-promo', box).forEach(function(btn) { btn.addEventListener('click', function() { var idx = +btn.getAttribute('data-idx'); if (confirm('¿Eliminar?')) { (S.cfg.promociones || []).splice(idx, 1); setDirty(true); renderPromociones(); } }); });
+  }
+  
+  function openPromoEditor(idx) {
+    var p = (S.cfg?.promociones || [])[idx];
+    var isNew = idx === null || idx === undefined;
+    var html = '<form id="promo-form" class="form-grid" novalidate>' +
+      '<input type="hidden" name="promoIdx" value="' + (isNew ? '-1' : idx) + '">' +
+      '<label class="span2">ID único<input name="id" required pattern="[a-z0-9-]+" value="' + esc(p ? p.id : '') + '"' + (isNew ? '' : ' readonly') + '></label>' +
+      '<label>Tipo<select name="tipo" required>' +
+        '<option value="banner"' + (p && p.tipo === 'banner' ? ' selected' : '') + '>📢 Banner superior</option>' +
+        '<option value="popup"' + (p && p.tipo === 'popup' ? ' selected' : '') + '>🪟 Popup</option>' +
+      '</select></label>' +
+      '<label class="span2">Título<input name="titulo" required value="' + esc(p ? p.titulo : '') + '"></label>' +
+      '<label class="span2">Texto<textarea name="texto" rows="2" required>' + esc(p ? p.texto : '') + '</textarea></label>' +
+      '<label>Color fondo<input name="color" type="color" value="' + esc(p ? p.color : '#111111') + '"></label>' +
+      '<label>Color texto<input name="textoColor" type="color" value="' + esc(p ? p.textoColor : '#D4AF37') + '"></label>' +
+      '<label>Código descuento (opcional)<input name="codigo" value="' + esc(p ? p.codigo : '') + '"></label>' +
+      '<label class="check"><input name="activo" type="checkbox" ' + (p ? p.activo : true) + '> Activo</label>' +
+    '</form>';
+    
+    $('#ed-title').textContent = isNew ? 'Nueva promoción' : 'Editar promoción';
+    $('#ed-body').innerHTML = html;
+    $('#ed-error').hidden = true;
+    $('#ed-delete').hidden = isNew;
+    $('#ed-delete').onclick = function() { if (confirm('¿Eliminar?')) { (S.cfg.promociones || []).splice(idx, 1); setDirty(true); renderPromociones(); closeEditor(); } };
+    $('#promo-form').onsubmit = function(e) {
+      e.preventDefault();
+      var form = e.target;
+      var data = {
+        id: form.id.value.trim(),
+        tipo: form.tipo.value,
+        titulo: form.titulo.value.trim(),
+        texto: form.texto.value.trim(),
+        color: form.color.value,
+        textoColor: form.textoColor.value,
+        codigo: form.codigo.value.trim() || null,
+        activo: form.activo.checked
+      };
+      if (!data.id && isNew) return toast('ID requerido');
+      if (!S.cfg.promociones) S.cfg.promociones = [];
+      if (isNew) S.cfg.promociones.push(data); else S.cfg.promociones[idx] = data;
+      setDirty(true); renderPromociones(); closeEditor(); toast('Promoción guardada');
+    };
+    $('#editor').showModal();
+  }
+  
+  $('#new-promo').addEventListener('click', function() { openPromoEditor(null); });
+
   /* ---------- Ventas y contacto ---------- */
   var cfgForm = $('#cfg');
   function renderCfg() { $$('input', cfgForm).forEach(function (i) { i.value = S.cfg[i.name] == null ? '' : S.cfg[i.name]; }); }
   cfgForm.addEventListener('input', function (e) { if (!e.target.name) return; S.cfg[e.target.name] = e.target.value.trim(); setDirty(true); });
+
+  /* ---------- Pedidos ---------- */
+  function renderPedidos() {
+    var box = $('#list-pedidos');
+    var q = ($('#q-pedidos').value || '').toLowerCase();
+    var estadoFiltro = $('#f-estado').value;
+    
+    // Leer pedidos del localStorage (simula admin_orders del checkout)
+    var pedidos = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
+    
+    if (q) {
+      pedidos = pedidos.filter(function(p) {
+        return (p.numero && p.numero.toLowerCase().includes(q)) ||
+               (p.cliente && p.cliente.nombre && p.cliente.nombre.toLowerCase().includes(q)) ||
+               (p.cliente && p.cliente.email && p.cliente.email.toLowerCase().includes(q)) ||
+               (p.cliente && p.cliente.celular && p.cliente.celular.includes(q));
+      });
+    }
+    if (estadoFiltro) {
+      pedidos = pedidos.filter(function(p) { return p.estado === estadoFiltro; });
+    }
+    
+    $('#count-pedidos').textContent = pedidos.length + ' pedido(s)';
+    
+    if (!pedidos.length) {
+      box.innerHTML = '<p class="muted" style="text-align:center;padding:32px">No hay pedidos' + (q || estadoFiltro ? ' con ese filtro' : '') + '.</p>';
+      return;
+    }
+    
+    box.innerHTML = pedidos.map(function(p) {
+      var items = (p.pago && p.pago.items) ? p.pago.items.map(function(i) { 
+        return i.nombre + ' (' + i.color + ') x' + i.cantidad; 
+      }).join(', ') : '—';
+      var fecha = p.fecha ? new Date(p.fecha).toLocaleString('es-CO') : '—';
+      var estadoClass = 'estado-' + (p.estado || 'pendiente');
+      var estadoLabel = {
+        'pagado': '✅ Pagado',
+        'pendiente_pago': '⏳ Pendiente',
+        'enviado': '📦 Enviado',
+        'entregado': '✅ Entregado',
+        'cancelado': '❌ Cancelado'
+      }[p.estado] || p.estado;
+      
+      return '<div class="prow" data-id="' + (p.numero || '') + '">' +
+        '<div class="pcol p-num"><strong>' + esc(p.numero) + '</strong></div>' +
+        '<div class="pcol p-fecha">' + esc(fecha) + '</div>' +
+        '<div class="pcol p-cliente">' + esc(p.cliente?.nombre || '—') + '<br><small>' + esc(p.cliente?.email || '') + '</small></div>' +
+        '<div class="pcol p-items" title="' + esc(items) + '">' + esc(items.length > 60 ? items.slice(0, 60) + '…' : items) + '</div>' +
+        '<div class="pcol p-total">' + esc(money(p.pago?.total)) + '</div>' +
+        '<div class="pcol p-estado"><span class="estado ' + estadoClass + '">' + estadoLabel + '</span></div>' +
+        '<div class="pcol p-acciones">' +
+          '<button class="btn btn-ghost-dark btn-sm wa-btn" data-wa="' + esc(p.cliente?.celular || '') + '" data-nombre="' + esc(p.cliente?.nombre || '') + '" data-pedido="' + esc(p.numero) + '" title="Contactar por WhatsApp">💬 WhatsApp</button>' +
+          '<select class="estado-select" data-pedido="' + esc(p.numero) + '">' +
+            '<option value="pendiente_pago" ' + (p.estado === 'pendiente_pago' ? 'selected' : '') + '>Pendiente</option>' +
+            '<option value="pagado" ' + (p.estado === 'pagado' ? 'selected' : '') + '>Pagado</option>' +
+            '<option value="enviado" ' + (p.estado === 'enviado' ? 'selected' : '') + '>Enviado</option>' +
+            '<option value="entregado" ' + (p.estado === 'entregado' ? 'selected' : '') + '>Entregado</option>' +
+            '<option value="cancelado" ' + (p.estado === 'cancelado' ? 'selected' : '') + '>Cancelado</option>' +
+          '</select>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    
+    // Event listeners para botones WhatsApp y selects de estado
+    $$('.wa-btn', box).forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var wa = btn.getAttribute('data-wa');
+        var nombre = btn.getAttribute('data-nombre');
+        var pedido = btn.getAttribute('data-pedido');
+        if (!wa) return toast('Sin WhatsApp del cliente');
+        var msg = 'Hola ' + nombre + ', soy de Lovely. Tu pedido ' + pedido + ' está en proceso. ¡Gracias por tu compra!';
+        window.open('https://wa.me/57' + wa + '?text=' + encodeURIComponent(msg), '_blank');
+      });
+    });
+    
+    $$('.estado-select', box).forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        var pedidoNum = sel.getAttribute('data-pedido');
+        var nuevoEstado = sel.value;
+        actualizarEstadoPedido(pedidoNum, nuevoEstado);
+      });
+    });
+  }
+  
+  function actualizarEstadoPedido(numero, nuevoEstado) {
+    var pedidos = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
+    var idx = pedidos.findIndex(function(p) { return p.numero === numero; });
+    if (idx === -1) return toast('Pedido no encontrado');
+    pedidos[idx].estado = nuevoEstado;
+    pedidos[idx].fechaEstado = new Date().toISOString();
+    localStorage.setItem('lv_admin_orders', JSON.stringify(pedidos));
+    renderPedidos();
+    toast('Estado actualizado a: ' + nuevoEstado);
+  }
+  
+  $('#q-pedidos').addEventListener('input', renderPedidos);
+  $('#f-estado').addEventListener('change', renderPedidos);
+  $('#export-pedidos').addEventListener('click', function() {
+    var pedidos = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
+    if (!pedidos.length) return toast('No hay pedidos para exportar');
+    var csv = 'Numero,Fecha,Cliente,Email,Celular,Ciudad,Items,Subtotal,Envio,Total,Estado,MarketingOptin\n' +
+      pedidos.map(function(p) {
+        var items = (p.pago && p.pago.items) ? p.pago.items.map(function(i) { return i.nombre + ' (' + i.color + ') x' + i.cantidad; }).join('; ') : '';
+        return '"' + p.numero + '","' + (p.fecha || '') + '","' + (p.cliente?.nombre || '') + '","' + (p.cliente?.email || '') + '","' + (p.cliente?.celular || '') + '","' + (p.cliente?.ciudad || '') + '","' + items + '",' + (p.pago?.subtotal || 0) + ',' + (p.pago?.envio || 0) + ',' + (p.pago?.total || 0) + ',"' + (p.estado || '') + '",' + (p.cliente?.marketingOptin ? 'SI' : 'NO');
+      }).join('\n');
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'pedidos-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+    toast('CSV descargado');
+  });
+
+  /* ---------- Marketing ---------- */
+  function renderMarketing() {
+    var box = $('#list-marketing');
+    var q = ($('#q-marketing').value || '').toLowerCase();
+    
+    var contactos = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
+    
+    if (q) {
+      contactos = contactos.filter(function(c) {
+        return (c.nombre && c.nombre.toLowerCase().includes(q)) ||
+               (c.email && c.email.toLowerCase().includes(q)) ||
+               (c.celular && c.celular.includes(q));
+      });
+    }
+    
+    $('#count-marketing').textContent = contactos.length + ' contacto(s) para marketing';
+    
+    if (!contactos.length) {
+      box.innerHTML = '<p class="muted" style="text-align:center;padding:32px">No hay contactos de marketing' + (q ? ' con ese filtro' : '') + '.</p>';
+      return;
+    }
+    
+    box.innerHTML = contactos.map(function(c) {
+      var fecha = c.fechaRegistro ? new Date(c.fechaRegistro).toLocaleDateString('es-CO') : '—';
+      return '<div class="prow">' +
+        '<div class="pcol p-num"><strong>' + esc(c.nombre || '—') + '</strong></div>' +
+        '<div class="pcol p-fecha">' + esc(fecha) + '</div>' +
+        '<div class="pcol p-cliente">' + esc(c.email || '—') + '<br><small>' + esc(c.celular || '') + '</small></div>' +
+        '<div class="pcol p-items">' + esc(c.fuente || 'checkout') + '</div>' +
+        '<div class="pcol p-total">' + (c.activo ? '<span class="estado estado-pagado">✅ Activo</span>' : '<span class="estado estado-cancelado">❌ Baja</span>') + '</div>' +
+        '<div class="pcol p-acciones">' +
+          '<button class="btn btn-ghost-dark btn-sm wa-btn" data-wa="' + esc(c.celular || '') + '" data-nombre="' + esc(c.nombre || '') + '" title="Contactar por WhatsApp">💬 WhatsApp</button>' +
+          (c.activo 
+            ? '<button class="btn btn-danger btn-sm baja-btn" data-email="' + esc(c.email) + '">Dar de baja</button>'
+            : '<button class="btn btn-dark btn-sm reactivar-btn" data-email="' + esc(c.email) + '">Reactivar</button>') +
+        '</div>' +
+      '</div>';
+    }).join('');
+    
+    $$('.wa-btn', box).forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var wa = btn.getAttribute('data-wa');
+        var nombre = btn.getAttribute('data-nombre');
+        if (!wa) return toast('Sin WhatsApp');
+        var msg = 'Hola ' + nombre + ', somos Lovely. ¿Te interesan nuestras novedades? 💍';
+        window.open('https://wa.me/57' + wa + '?text=' + encodeURIComponent(msg), '_blank');
+      });
+    });
+    
+    $$('.baja-btn', box).forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var email = btn.getAttribute('data-email');
+        var contactos = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
+        var c = contactos.find(function(x) { return x.email === email; });
+        if (c) { c.activo = false; c.fechaBaja = new Date().toISOString(); localStorage.setItem('lv_marketing', JSON.stringify(contactos)); renderMarketing(); toast('Contacto dado de baja'); }
+      });
+    });
+    
+    $$('.reactivar-btn', box).forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var email = btn.getAttribute('data-email');
+        var contactos = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
+        var c = contactos.find(function(x) { return x.email === email; });
+        if (c) { c.activo = true; delete c.fechaBaja; localStorage.setItem('lv_marketing', JSON.stringify(contactos)); renderMarketing(); toast('Contacto reactivado'); }
+      });
+    });
+  }
+  
+  $('#q-marketing').addEventListener('input', renderMarketing);
+  $('#export-marketing').addEventListener('click', function() {
+    var contactos = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
+    if (!contactos.length) return toast('No hay contactos para exportar');
+    var csv = 'Nombre,Email,Celular,FechaRegistro,Fuente,Activo\n' +
+      contactos.map(function(c) {
+        return '"' + (c.nombre || '') + '","' + (c.email || '') + '","' + (c.celular || '') + '","' + (c.fechaRegistro || '') + '","' + (c.fuente || '') + '",' + (c.activo ? 'SI' : 'NO');
+      }).join('\n');
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'marketing-' + new Date().toISOString().slice(0, 10) + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+    toast('CSV descargado');
+  });
+  
+  $('#sync-marketing').addEventListener('click', function() {
+    // Sincroniza con lv_orders para extraer emails con marketingOptin
+    var pedidos = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
+    var contactos = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
+    var nuevos = 0;
+    pedidos.forEach(function(p) {
+      if (p.cliente && p.cliente.marketingOptin && p.cliente.email) {
+        if (!contactos.find(function(c) { return c.email === p.cliente.email; })) {
+          contactos.push({
+            email: p.cliente.email,
+            nombre: p.cliente.nombre,
+            celular: p.cliente.celular,
+            fechaRegistro: p.fecha,
+            fuente: 'checkout:' + p.numero,
+            activo: true
+          });
+          nuevos++;
+        }
+      }
+    });
+    localStorage.setItem('lv_marketing', JSON.stringify(contactos));
+    renderMarketing();
+    toast(nuevos + ' contactos nuevos sincronizados');
+  });
 
   /* ---------- Respaldo ---------- */
   $('#backup').addEventListener('click', function () {
@@ -337,7 +978,7 @@
   });
   window.addEventListener('beforeunload', function (e) { if (S.dirty) { e.preventDefault(); e.returnValue = ''; } });
 
-  function renderAll() { renderFilters(); renderList(); renderCats(); renderCfg(); }
+  function renderAll() { renderFilters(); renderList(); renderCats(); renderCfg(); renderPedidos(); renderMarketing(); }
 
   /* ---------- Inicio ---------- */
   function connect(a) {

@@ -13,58 +13,101 @@
 <script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css">
 </head>
 <body data-page="checkout" class="co-body">
-<div class="preview-bar">Vista previa en desarrollo · el pago es simulado, no se cobra nada</div>
 <header class="co-header"><div class="wrap">
   <a href="index.html" aria-label="Volver a la tienda"><img src="assets/img/logo-negro.svg" alt="LV Accesorios" style="height:28px;width:auto"></a>
-  <span class="secure"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Pago 100 % seguro</span>
+  <span class="secure"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Confirmar pedido por WhatsApp</span>
 </div></header>
 
 <main class="wrap">
-  <ol class="steps" aria-label="Pasos de compra"><li>1. Datos y dirección</li><li>2. Envío</li><li>3. Pago</li></ol>
+  <ol class="steps" aria-label="Pasos de compra"><li>1. Datos y dirección</li><li>2. Envío y confirmación</li></ol>
 
   <div class="co-grid">
     <div class="panel">
       <section class="co-step" data-step="1">
-        <h1>Tus datos y dirección</h1>
-        <p class="note" style="margin:-6px 0 18px">¿Ya tienes cuenta? <a class="link-line" href="cuenta.html">Inicia sesión</a> o continúa como invitado.</p>
-        <form id="form-datos">
+        <h1>Tus datos para el envío</h1>
+        <form id="form-datos" novalidate>
           <div class="fields two">
-            <label class="field">Nombre completo<input required autocomplete="name" placeholder="Nombre y apellido"></label>
-            <label class="field">Cédula<input required inputmode="numeric" placeholder="Número de documento"></label>
-            <label class="field">Correo electrónico<input required type="email" autocomplete="email" placeholder="tu@correo.com"></label>
-            <label class="field">Celular (WhatsApp)<input required type="tel" autocomplete="tel" placeholder="300 000 0000"></label>
-            <label class="field">Departamento<select id="depto"><option>Antioquia</option><option>Atlántico</option><option>Bogotá D.C.</option><option>Bolívar</option><option>Cundinamarca</option><option>Santander</option><option>Valle del Cauca</option><option>Otro</option></select></label>
-            <label class="field">Ciudad / municipio<input id="ciudad" required autocomplete="address-level2" placeholder="Ej. Medellín"></label>
+            <label class="field">Nombre completo<input required autocomplete="name" placeholder="Nombre y apellido" name="nombre"></label>
+            <label class="field">Tipo de documento
+              <select name="tipoDoc" required>
+                <option value="CC">Cédula de Ciudadanía</option>
+                <option value="CE">Cédula de Extranjería</option>
+                <option value="NIT">NIT</option>
+                <option value="PASS">Pasaporte</option>
+              </select>
+            </label>
+            <label class="field">Número de documento<input required inputmode="numeric" placeholder="Número de documento" name="documento"></label>
+            <label class="field">Correo electrónico<input required type="email" autocomplete="email" placeholder="tu@correo.com" name="email"></label>
+            <label class="field">Celular (WhatsApp)<input required type="tel" autocomplete="tel" placeholder="300 000 0000" name="celular"></label>
+            <label class="field">Departamento
+              <select id="depto" name="departamento" required>
+                <option value="">Seleccione</option>
+                <option>Antioquia</option><option>Atlántico</option><option>Bogotá D.C.</option><option>Bolívar</option>
+                <option>Boyacá</option><option>Caldas</option><option>Caquetá</option><option>Casanare</option>
+                <option>Cauca</option><option>Cesar</option><option>Chocó</option><option>Córdoba</option>
+                <option>Cundinamarca</option><option>Guainía</option><option>Guaviare</option><option>Huila</option>
+                <option>La Guajira</option><option>Magdalena</option><option>Meta</option><option>Nariño</option>
+                <option>Norte de Santander</option><option>Putumayo</option><option>Quindío</option><option>Risaralda</option>
+                <option>San Andrés y Providencia</option><option>Santander</option><option>Sucre</option>
+                <option>Tolima</option><option>Valle del Cauca</option><option>Vaupés</option><option>Vichada</option>
+                <option>Otro</option>
+              </select>
+            </label>
+            <label class="field">Ciudad / municipio<input id="ciudad" required autocomplete="address-level2" placeholder="Ej. Medellín" name="ciudad"></label>
           </div>
-          <div class="fields"><label class="field">Dirección<input required autocomplete="street-address" placeholder="Calle, número, barrio, apto / casa"></label></div>
-          <button class="btn btn-dark btn-block" type="submit">Continuar a envío</button>
+          <div class="fields"><label class="field">Dirección completa<input required autocomplete="street-address" placeholder="Calle, número, barrio, apto / casa, referencia" name="direccion"></label></div>
+          
+          <!-- HABEAS DATA - Consentimiento tratamiento de datos (Ley 1581/2012 Colombia) -->
+          <fieldset class="habeas-fieldset" style="margin-top:16px;padding:16px;background:var(--gris-claro);border-radius:12px;border:1px solid var(--borde)">
+            <legend style="font-weight:600;margin-bottom:12px;font-size:14px">📋 Autorización Tratamiento de Datos Personales (Ley 1581/2012)</legend>
+            
+            <label class="checkbox-field" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer;font-size:13px;line-height:1.5">
+              <input type="checkbox" name="habeas_tratamiento" required style="margin-top:2px;accent-color:var(--oro);width:18px;height:18px;flex-shrink:0">
+              <span>
+                <strong>Acepto el tratamiento de mis datos personales</strong> para la gestión del pedido, facturación, envío y atención al cliente.
+                <a href="ayuda.html#datos" target="_blank" style="color:var(--oro);text-decoration:underline">Conozca nuestra Política de Tratamiento de Datos</a>.
+              </span>
+            </label>
+            
+            <label class="checkbox-field" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;line-height:1.5">
+              <input type="checkbox" name="marketing_optin" style="margin-top:2px;accent-color:var(--oro);width:18px;height:18px;flex-shrink:0">
+              <span>
+                <strong>Deseo recibir novedades, promociones y lanzamientos</strong> por WhatsApp y correo electrónico.
+                <br><small style="color:var(--grafito)">Podrá darse de baja en cualquier momento respondiendo "BAJA" o desde el enlace en nuestros correos.</small>
+              </span>
+            </label>
+          </fieldset>
+
+          <button class="btn btn-dark btn-block" type="submit" style="margin-top:16px">Continuar a envío</button>
         </form>
       </section>
 
       <section class="co-step" data-step="2" hidden>
-        <h1>Método de envío</h1>
-        <p class="note" style="margin:-6px 0 18px">Tarifas para <strong style="color:var(--ink)" id="city-label"></strong>. <button id="back-1" style="border:0;background:none;text-decoration:underline;padding:0;font-size:12px">Cambiar</button></p>
-        <label class="option"><input type="radio" name="envio" checked><span class="t"><strong>Envío estándar</strong><small>[N]–[N] días hábiles · Inter Rapidísimo</small></span><span class="p">$ [TARIFA]</span></label>
-        <label class="option"><input type="radio" name="envio"><span class="t"><strong>Envío express</strong><small>[N] día hábil · ciudades principales</small></span><span class="p">$ [TARIFA]</span></label>
-        <label class="option"><input type="radio" name="envio"><span class="t"><strong>Contra entrega</strong><small>Según cobertura</small></span><span class="p">$ [TARIFA]</span></label>
-        <button class="btn btn-dark btn-block" id="to-pay" style="margin-top:8px">Continuar al pago</button>
+        <h1>Método de envío y confirmación</h1>
+        <p class="note" style="margin:-6px 0 18px">Tarifas para <strong style="color:var(--ink)" id="city-label"></strong>. <button id="back-1" style="border:0;background:none;text-decoration:underline;padding:0;font-size:12px">Cambiar datos</button></p>
+        <label class="option"><input type="radio" name="envio" value="estandar" checked><span class="t"><strong>Envío estándar</strong><small>3–5 días hábiles · Inter Rapidísimo / Servientrega</small></span><span class="p" id="ship-estandar">$ 12.000</span></label>
+        <label class="option"><input type="radio" name="envio" value="express"><span class="t"><strong>Envío express</strong><small>1–2 días hábiles · Ciudades principales</small></span><span class="p" id="ship-express">$ 18.000</span></label>
+        <label class="option"><input type="radio" name="envio" value="contraentrega"><span class="t"><strong>Contra entrega</strong><small>Paga al recibir · Según cobertura</small></span><span class="p" id="ship-contra">$ 15.000</span></label>
+        <p class="note" style="font-size:12px;margin-top:8px">El costo final se confirma según tu ciudad exacta. <a href="ayuda.html#envios" target="_blank">Ver cobertura y tiempos</a>.</p>
+        
+        <div style="margin-top:16px;padding:16px;background:var(--gris-claro);border-radius:12px;border:1px solid var(--borde)">
+          <h3 style="margin:0 0 12px;font-size:14px">📋 Resumen de tu pedido</h3>
+          <div id="order-summary" style="font-size:13px;line-height:1.6"></div>
+        </div>
+        
+        <p class="note" style="font-size:12px;margin-top:12px">Al confirmar, se abrirá WhatsApp con tu pedido listo para enviar. Nuestro equipo te contactará en minutos para coordinar el pago y envío.</p>
+        <button class="btn btn-gold btn-block" id="confirm-order" style="margin-top:8px">Confirmar y abrir WhatsApp</button>
       </section>
 
       <section class="co-step" data-step="3" hidden>
-        <h1>Pago</h1>
-        <label class="option"><input type="radio" name="pago" checked><span class="t"><strong>PSE</strong><small>Débito desde tu cuenta bancaria</small></span></label>
-        <label class="option"><input type="radio" name="pago"><span class="t"><strong>Nequi</strong><small>Paga desde la app con notificación</small></span></label>
-        <label class="option"><input type="radio" name="pago"><span class="t"><strong>Tarjeta crédito o débito</strong><small>Visa, Mastercard, American Express</small></span></label>
-        <p class="note">Procesado por [PASARELA: Wompi]. Lovely nunca almacena los datos de tu tarjeta.</p>
-        <button class="btn btn-gold btn-block" id="pay">Pagar ahora</button>
-      </section>
-
-      <section class="co-step" data-step="4" hidden>
         <div class="done-box">
           <div class="check"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-          <h1 style="margin:0">¡Gracias por tu compra!</h1>
-          <p style="margin:0;color:var(--grafito);line-height:1.7;max-width:420px">Tu pedido <strong id="order-n"></strong> está confirmado. Te enviamos el detalle a tu correo y el número de guía por WhatsApp.</p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><a class="btn btn-dark" href="cuenta.html">Seguir mi pedido</a><a class="btn btn-outline" href="index.html">Volver a la tienda</a></div>
+          <h1 style="margin:0">¡Pedido enviado por WhatsApp!</h1>
+          <p style="margin:0;color:var(--grafito);line-height:1.7;max-width:420px">Tu solicitud <strong id="order-n"></strong> ha sido enviada. Nuestro equipo te responderá por WhatsApp en pocos minutos para confirmar detalles y coordinar el pago.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px">
+            <a class="btn btn-dark" href="https://wa.me/57XXXXXXXXXX?text=Hola%20Lovely,%20quiero%20saber%20el%20estado%20de%20mi%20pedido" target="_blank" rel="noopener">Hablar por WhatsApp</a>
+            <a class="btn btn-outline" href="index.html">Volver a la tienda</a>
+          </div>
         </div>
       </section>
     </div>
@@ -78,10 +121,11 @@
         <div><span>Envío</span><span id="t-ship"></span></div>
         <div class="grand"><span>Total</span><span id="t-total"></span></div>
       </div>
-      <div class="help-box"><b>¿Dudas con tu compra?</b> <a data-wa="Hola Lovely, necesito ayuda con mi compra." href="#" style="text-decoration:underline">Escríbenos por WhatsApp</a> y te acompañamos.</div>
+      <div class="help-box"><b>¿Dudas con su compra?</b> <a data-wa="Hola Lovely, necesito ayuda con mi compra." href="#" style="text-decoration:underline">Escríbanos por WhatsApp</a> y le acompañamos.</div>
     </aside>
   </div>
 </main>
+<div id="site-footer"></div>
 <script src="js/data.js"></script>
 <script src="js/main.js"></script>
 </body>

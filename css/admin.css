@@ -126,4 +126,35 @@ label.check input{width:20px;height:20px;min-height:0;accent-color:var(--negro)}
 /* Aviso */
 .toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);background:var(--negro);color:#fff;padding:12px 18px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:100;max-width:calc(100% - 32px)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+/* Estilos para Pedidos y Marketing */
+.pcol{flex:1;min-width:0}
+.p-num{flex:0 0 110px;font-family:var(--f-titulo);font-weight:700;font-size:13px}
+.p-fecha{flex:0 0 150px;font-size:12px;color:var(--texto-2);white-space:nowrap}
+.p-cliente{flex:1;min-width:140px;font-size:13px}
+.p-cliente small{display:block;color:var(--texto-2);font-size:11px}
+.p-items{flex:2;min-width:180px;font-size:12px;color:var(--grafito);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-total{flex:0 0 110px;font-family:var(--f-titulo);font-weight:700;font-size:13px;text-align:right}
+.p-estado{flex:0 0 130px}
+.p-acciones{flex:0 0 200px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+
+.estado{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;font-size:11px;font-weight:600;border-radius:2px;white-space:nowrap}
+.estado-pagado{background:#E8F5E9;color:#2E7D32}
+.estado-pendiente_pago{background:#FFF8E1;color:#F57F17}
+.estado-enviado{background:#E3F2FD;color:#1565C0}
+.estado-entregado{background:#E8F5E9;color:#2E7D32}
+.estado-cancelado{background:#FCE4EC;color:#C62828}
+
+.estado-select{width:100%;min-height:36px;padding:6px 10px;font-size:12px;border:1px solid var(--borde);border-radius:2px;background:#fff}
+.btn-sm{min-height:32px;padding:0 10px;font-size:11px}
+
+@media (max-width: 900px) {
+  .pcol.p-fecha, .pcol.p-items, .pcol.p-total { display: none; }
+  .prow { flex-wrap: wrap; }
+  .pcol.p-cliente { flex-basis: 50%; }
+  .pcol.p-acciones { flex-basis: 100%; justify-content: flex-start; margin-top: 4px; }
+}
+
+/* Toast better for admin */
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);background:var(--negro);color:#fff;padding:12px 18px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:100;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){.toast,.btn{transition:none}}

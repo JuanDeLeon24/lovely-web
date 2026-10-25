@@ -58,7 +58,13 @@
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="productos" aria-selected="true">Productos</button>
     <button role="tab" data-tab="categorias" aria-selected="false">Categorías</button>
-    <button role="tab" data-tab="ventas" aria-selected="false">Ventas y contacto</button>
+    <button role="tab" data-tab="faqs" aria-selected="false">❓ FAQs</button>
+    <button role="tab" data-tab="descuentos" aria-selected="false">🏷️ Descuentos</button>
+    <button role="tab" data-tab="paginas" aria-selected="false">📄 Páginas</button>
+    <button role="tab" data-tab="promociones" aria-selected="false">🎯 Promociones</button>
+    <button role="tab" data-tab="pedidos" aria-selected="false">📦 Pedidos</button>
+    <button role="tab" data-tab="marketing" aria-selected="false">📧 Marketing</button>
+    <button role="tab" data-tab="ventas" aria-selected="false">⚙️ Configuración</button>
     <button role="tab" data-tab="respaldo" aria-selected="false">Respaldo</button>
   </nav>
 
@@ -77,6 +83,81 @@
       <p class="muted">Nombre, ícono y foto de portada de cada categoría del menú y del inicio.</p>
       <div id="cats" class="cards"></div>
       <button id="new-cat" class="btn btn-outline">+ Nueva categoría</button>
+    </section>
+
+    <section data-panel="faqs" hidden>
+      <div class="toolbar">
+        <select id="f-faq-cat" aria-label="Filtrar por categoría">
+          <option value="">Todas las categorías</option>
+          <option value="pagos">Pagos</option>
+          <option value="envios">Envíos</option>
+          <option value="garantias">Garantías</option>
+          <option value="cambios">Cambios</option>
+        </select>
+        <button id="new-faq" class="btn btn-dark">+ Nueva FAQ</button>
+      </div>
+      <p id="count-faqs" class="muted"></p>
+      <div id="list-faqs" class="plist"></div>
+    </section>
+
+    <section data-panel="descuentos" hidden>
+      <div class="toolbar">
+        <input id="q-desc" type="search" placeholder="Buscar descuento (código, descripción)..." aria-label="Buscar descuento">
+        <select id="f-desc-activo" aria-label="Filtrar por estado">
+          <option value="">Todos</option>
+          <option value="true">Activos</option>
+          <option value="false">Inactivos</option>
+        </select>
+        <button id="new-desc" class="btn btn-dark">+ Nuevo descuento</button>
+      </div>
+      <p id="count-desc" class="muted"></p>
+      <div id="list-desc" class="plist"></div>
+    </section>
+
+    <section data-panel="paginas" hidden>
+      <div class="toolbar">
+        <select id="page-select" aria-label="Seleccionar página">
+          <option value="index">Inicio (index)</option>
+          <option value="nosotros">Nosotros</option>
+          <option value="contacto">Contacto</option>
+        </select>
+      </div>
+      <div id="page-editor" class="form-grid"></div>
+    </section>
+
+    <section data-panel="promociones" hidden>
+      <div class="toolbar">
+        <button id="new-promo" class="btn btn-dark">+ Nueva promoción</button>
+      </div>
+      <p id="count-promos" class="muted"></p>
+      <div id="list-promos" class="plist"></div>
+    </section>
+
+    <section data-panel="pedidos" hidden>
+      <div class="toolbar">
+        <input id="q-pedidos" type="search" placeholder="Buscar pedido (número, cliente, email)..." aria-label="Buscar pedido">
+        <select id="f-estado" aria-label="Filtrar por estado">
+          <option value="">Todos los estados</option>
+          <option value="pagado">Pagado</option>
+          <option value="pendiente_pago">Pendiente de pago</option>
+          <option value="enviado">Enviado</option>
+          <option value="entregado">Entregado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <button id="export-pedidos" class="btn btn-outline">Exportar CSV</button>
+      </div>
+      <p id="count-pedidos" class="muted"></p>
+      <div id="list-pedidos" class="plist"></div>
+    </section>
+
+    <section data-panel="marketing" hidden>
+      <div class="toolbar">
+        <input id="q-marketing" type="search" placeholder="Buscar contacto (nombre, email, celular)..." aria-label="Buscar contacto">
+        <button id="export-marketing" class="btn btn-outline">Exportar CSV</button>
+        <button id="sync-marketing" class="btn btn-dark">Sincronizar con localStorage</button>
+      </div>
+      <p id="count-marketing" class="muted"></p>
+      <div id="list-marketing" class="plist"></div>
     </section>
 
     <section data-panel="ventas" hidden>
