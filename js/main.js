@@ -122,6 +122,14 @@
 
   /* ---------- Efectos de scroll ---------- */
   var REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* Las animaciones de entrada solo ocultan contenido si este script arrancó (clase fx) */
+  if (!REDUCE && 'IntersectionObserver' in window) document.documentElement.classList.add('fx');
+  /* Red de seguridad: nada visible en pantalla se queda oculto */
+  function revealSafety() {
+    $$('.reveal:not(.in)').forEach(function (e) { var r = e.getBoundingClientRect(); if (r.top < window.innerHeight && r.bottom > 0) e.classList.add('in'); });
+  }
+  setTimeout(revealSafety, 2500);
+  window.addEventListener('scroll', function () { clearTimeout(revealSafety._t); revealSafety._t = setTimeout(revealSafety, 900); }, { passive: true });
   var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
   var pad2 = function (n) { return (n < 10 ? '0' : '') + n; };
 
