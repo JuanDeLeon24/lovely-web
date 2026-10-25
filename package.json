@@ -1,0 +1,11 @@
+{
+  "name": "lovely-web",
+  "private": true,
+  "description": "Herramientas de desarrollo. La tienda no necesita instalar nada: es un sitio estático.",
+  "scripts": {
+    "build:visor": "esbuild js/visor3d.js --bundle --format=iife --global-name=LVVisor3D --minify --legal-comments=eof --outfile=js/visor3d.bundle.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.20.2"
+  }
+}

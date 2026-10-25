@@ -24,6 +24,22 @@
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
+  var ASSET_V = '20261025b';
+  /* Logos SVG: si el servidor los envía con un tipo incorrecto, se vuelven a pedir y se muestran igual */
+  function fixSvg(img) {
+    if (img._fx) return; img._fx = 1;
+    var src = img.getAttribute('src');
+    fetch(src).then(function (r) { if (!r.ok) throw new Error(); return r.text(); }).then(function (t) {
+      if (t.indexOf('<svg') < 0) return;
+      img.setAttribute('data-src', src); img.src = URL.createObjectURL(new Blob([t], { type: 'image/svg+xml' }));
+    }).catch(function () {});
+  }
+  function watchSvgs() {
+    $$('img[src$=".svg"]').forEach(function (img) {
+      if (img.complete && img.naturalWidth === 0) fixSvg(img);
+      else img.addEventListener('error', function () { fixSvg(img); });
+    });
+  }
   var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); };
   var waLink = function (msg) { return 'https://wa.me/' + C.whatsapp + '?text=' + encodeURIComponent(msg || 'Hola Lovely, quiero más información.'); };
 
@@ -118,14 +134,118 @@
       '<div class="name">' + p.name + '</div><div class="cat">' + c.name + (p.colors.length > 1 ? ' · ' + p.colors.length + ' colores' : '') + '</div><div class="price">' + money(p.price) + '</div></a>';
   }
 
-  /* ---------- Revelado al hacer scroll ---------- */
+  /* ---------- Efectos de scroll ---------- */
+  var REDUCE = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* Las animaciones de entrada solo ocultan contenido si este script arrancó (clase fx) */
+  if (!REDUCE && 'IntersectionObserver' in window) document.documentElement.classList.add('fx');
+  /* Red de seguridad: nada visible en pantalla se queda oculto */
+  function revealSafety() {
+    $$('.reveal:not(.in)').forEach(function (e) { var r = e.getBoundingClientRect(); if (r.top < window.innerHeight && r.bottom > 0) e.classList.add('in'); });
+  }
+  setTimeout(revealSafety, 2500);
+  window.addEventListener('scroll', function () { clearTimeout(revealSafety._t); revealSafety._t = setTimeout(revealSafety, 900); }, { passive: true });
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  var pad2 = function (n) { return (n < 10 ? '0' : '') + n; };
+
+  /* Revelado: los elementos que entran juntos lo hacen en cascada */
+  var revealIO = null;
   function reveal() {
+    $$('.section-head h2, .story h2, .promo h2, .page-hero h1, .prose h2, .pd-info h1, #shop-title').forEach(split);
     var els = $$('.reveal:not(.in)');
-    if (!('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in'); }); return; }
-    var io = new IntersectionObserver(function (en) {
-      en.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add('in'); io.unobserve(x.target); } });
-    }, { rootMargin: '0px 0px -40px 0px' });
-    els.forEach(function (e) { io.observe(e); });
+    if (REDUCE || !('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in'); }); return; }
+    revealIO = revealIO || new IntersectionObserver(function (en) {
+      en.filter(function (x) { return x.isIntersecting; })
+        .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top || a.boundingClientRect.left - b.boundingClientRect.left; })
+        .forEach(function (x, k) { x.target.style.setProperty('--d', Math.min(k, 7) * 85 + 'ms'); x.target.classList.add('in'); revealIO.unobserve(x.target); });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    els.forEach(function (e) { revealIO.observe(e); });
+  }
+  /* Títulos: cada palabra sube desde una máscara */
+  function split(el) {
+    if (!el || REDUCE) return;
+    var txt = el.textContent.trim(); if (el.getAttribute('data-split') === txt) return;
+    var html = el.innerHTML.split(/<br\s*\/?>/i).map(function (line) {
+      var tmp = document.createElement('div'); tmp.innerHTML = line;
+      return tmp.textContent.trim().split(/\s+/).map(function (w) { return '<span class="w"><span>' + esc(w) + '</span></span>'; }).join(' ');
+    }).join('<br>');
+    el.innerHTML = html; el.setAttribute('data-split', el.textContent.trim()); el.setAttribute('aria-label', txt);
+    $$('.w > span', el).forEach(function (s, i) { s.style.setProperty('--i', i); s.setAttribute('aria-hidden', 'true'); });
+    el.classList.add('split', 'reveal'); el.classList.remove('in');
+  }
+
+  /* Paralaje y escaparate: un solo bucle de animación ligado al scroll */
+  var PX = [], SC = null, ticking = false;
+  function parallax() {
+    if (REDUCE) return;
+    [['.hero-photo', 0.12], ['.promo-media img', 0.08], ['.cat-card .ph img', 0.06]].forEach(function (d) {
+      $$(d[0]).forEach(function (el) { if (!el._px) { el._px = d[1]; el.classList.add('px'); PX.push(el); } });
+    });
+    onScroll();
+  }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(scrollFrame); } }
+  function scrollFrame() {
+    ticking = false;
+    var vh = window.innerHeight;
+    PX.forEach(function (el) {
+      var r = el.parentElement.getBoundingClientRect(); if (r.bottom < -50 || r.top > vh + 50) return;
+      var prog = (r.top + r.height / 2 - vh / 2) / vh;
+      el.style.transform = 'translate3d(0,' + (prog * el._px * -100).toFixed(2) + 'px,0) scale(1.14)';
+    });
+    if (SC) scShowcase(vh);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+
+  /* Escaparate de categoría: sección fijada que recorre los destacados */
+  function showcase(cat) {
+    var host = $('#showcase');
+    var items = cat === 'todo' ? [] : PRODUCTS.filter(function (p) { return p.cat === cat; })
+      .sort(function (a, b) { return (b.top - a.top) || (b.nuevo - a.nuevo); }).slice(0, 5);
+    if (items.length < 2) { if (host) { host.hidden = true; host.innerHTML = ''; } SC = null; document.body.classList.remove('sc-active'); return; }
+    if (!host) { host = document.createElement('section'); host.id = 'showcase'; host.className = 'showcase'; var m = $('main'); m.parentNode.insertBefore(host, m); }
+    var c = catOf(cat);
+    host.hidden = false; host.style.setProperty('--n', items.length); host.setAttribute('aria-label', 'Destacados de ' + c.name);
+    host.innerHTML = '<div class="sc-sticky">' +
+      '<div class="sc-word" aria-hidden="true">' + esc(c.name) + '</div>' +
+      '<div class="sc-media">' + items.map(function (p, i) {
+        return '<a class="sc-slide" href="producto.html?id=' + p.id + '" tabindex="-1" aria-hidden="true"><img src="' + photo(p.colors[0].img) + '" alt=""' + (i ? ' loading="lazy"' : '') + '></a>';
+      }).join('') + '<div class="sc-frame" aria-hidden="true"></div></div>' +
+      '<div class="sc-copy">' + items.map(function (p, i) {
+        var sw = p.colors.length > 1 ? '<span class="sc-sw">' + p.colors.slice(0, 6).map(function (x) { return '<i style="background:' + x.hex + '"></i>'; }).join('') + '</span>' : '';
+        return '<article class="sc-text" data-i="' + i + '">' +
+          '<div class="sc-num"><span><b>' + pad2(i + 1) + '</b></span><small>/ ' + pad2(items.length) + '</small></div>' +
+          '<p class="sc-line sc-eyebrow"><span>' + esc(c.name) + (p.badge ? ' · ' + esc(p.badge) : '') + '</span></p>' +
+          '<h2 class="sc-line sc-name"><span>' + esc(p.name) + '</span></h2>' +
+          '<p class="sc-line sc-desc"><span>' + esc(p.desc) + '</span></p>' +
+          '<div class="sc-meta"><strong>' + money(p.price) + '</strong>' + sw + '</div>' +
+          '<div class="sc-ctas"><a class="btn btn-gold" href="producto.html?id=' + p.id + '">Ver producto</a>' +
+          (p.modelo3d ? '<a class="btn btn-outline-light" href="producto.html?id=' + p.id + '&amp;vista=3d">Explorar en 3D</a>' : '') + '</div></article>';
+      }).join('') + '</div>' +
+      '<ol class="sc-dots">' + items.map(function (p, i) { return '<li><button type="button" data-i="' + i + '" aria-label="Ver ' + esc(p.name) + '"></button></li>'; }).join('') + '</ol>' +
+      '<div class="sc-bar" aria-hidden="true"><span></span></div>' +
+      '<div class="sc-hint" aria-hidden="true">Desliza para descubrir<i></i></div></div>';
+    SC = { host: host, n: items.length, idx: -1, slides: $$('.sc-slide', host), texts: $$('.sc-text', host), dots: $$('.sc-dots button', host) };
+    $('.sc-dots', host).addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var i = +b.getAttribute('data-i'), top = host.getBoundingClientRect().top + window.scrollY, run = host.offsetHeight - $('.sc-sticky', host).offsetHeight;
+      window.scrollTo({ top: top + run * (i + 0.5) / SC.n, behavior: REDUCE ? 'auto' : 'smooth' });
+    });
+    if (REDUCE) { SC.texts.forEach(function (t) { t.classList.add('on'); }); SC.slides.forEach(function (s) { s.classList.add('on'); }); SC = null; return; }
+    onScroll();
+  }
+  function scShowcase(vh) {
+    var r = SC.host.getBoundingClientRect(), run = SC.host.offsetHeight - $('.sc-sticky', SC.host).offsetHeight;
+    if (r.bottom < -vh || r.top > vh * 2) return;
+    var p = clamp(-r.top / run, 0, 1), f = p * SC.n, idx = Math.min(SC.n - 1, Math.floor(f));
+    SC.host.style.setProperty('--p', p.toFixed(4));
+    SC.host.style.setProperty('--t', clamp(f - idx, 0, 1).toFixed(3));
+    SC.host.classList.toggle('started', p > 0.01);
+    document.body.classList.toggle('sc-active', r.top <= 0 && r.bottom > vh * 0.6);
+    if (idx === SC.idx) return;
+    SC.idx = idx;
+    SC.slides.forEach(function (s, i) { s.classList.toggle('on', i === idx); s.classList.toggle('past', i < idx); s.setAttribute('tabindex', i === idx ? '0' : '-1'); });
+    SC.texts.forEach(function (t, i) { t.classList.toggle('on', i === idx); t.classList.toggle('past', i < idx); t.setAttribute('aria-hidden', i === idx ? 'false' : 'true'); $$('a', t).forEach(function (a) { a.tabIndex = i === idx ? 0 : -1; }); });
+    SC.dots.forEach(function (d, i) { d.setAttribute('aria-current', i === idx ? 'true' : 'false'); });
   }
 
   /* ---------- Home ---------- */
@@ -165,7 +285,9 @@
       if (state.sort === 'precio-asc') list.sort(function (a, b) { return a.price - b.price; });
       if (state.sort === 'precio-desc') list.sort(function (a, b) { return b.price - a.price; });
       var title = state.cat === 'todo' ? (state.filtro === 'nuevos' ? 'Novedades' : 'Todos los accesorios') : catOf(state.cat).name;
-      $('#shop-title').textContent = title; $('#crumb-current').textContent = title;
+      var st = $('#shop-title'); if (st.getAttribute('data-split') !== title) { st.removeAttribute('data-split'); st.textContent = title; }
+      $('#crumb-current').textContent = title;
+      if (state.cat !== state._sc) { state._sc = state.cat; showcase(state.cat); }
       document.title = title + ' | Lovely Accesorios';
       $('#shop-count').textContent = list.length + (list.length === 1 ? ' producto' : ' productos');
       grid.innerHTML = list.length ? list.map(card).join('') : '<p class="empty">No encontramos productos con esos filtros.</p>';
@@ -220,10 +342,19 @@
     });
     main.addEventListener('mouseleave', function () { main.classList.remove('zoom'); });
     /* Visor 3D: se carga solo cuando se pide (js/visor3d.js + Three.js en js/vendor) */
-    var dynImport; try { dynImport = new Function('u', 'return import(u)'); } catch (e) {}
+    /* Paquete clásico (no módulo): carga con cualquier servidor, aunque envíe .js como texto */
+    function loadVisor() {
+      if (window.LVVisor3D) return Promise.resolve(window.LVVisor3D);
+      return loadVisor._p || (loadVisor._p = new Promise(function (ok, ko) {
+        var sc = document.createElement('script'); sc.src = 'js/visor3d.bundle.js?v=' + ASSET_V; sc.async = true;
+        sc.onload = function () { window.LVVisor3D ? ok(window.LVVisor3D) : ko(new Error('visor')); };
+        sc.onerror = function () { loadVisor._p = null; ko(new Error('visor')); };
+        document.head.appendChild(sc);
+      }));
+    }
     function open3D() {
-      if (!dynImport) { toast('Tu navegador no permite la vista 3D.'); return; }
-      dynImport(new URL('js/visor3d.js', location.href).href)
+      toast('Cargando vista 3D…');
+      loadVisor()
         .then(function (m) { m.openViewer(p, st.color, function (i) { setColor(i); }); })
         .catch(function () { toast('No pudimos cargar la vista 3D. Intenta de nuevo.'); });
     }
@@ -477,229 +608,6 @@
 
     go(1);
   }
-      var sub = it.reduce(function (a, x) { var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; return a + (p ? p.price * x.qty : 0); }, 0);
-      var ship = orderData.envio?.costo || 0;
-      var total = sub + ship;
-      
-      // Mostrar métodos de pago disponibles
-      container.innerHTML = '<p class="note" style="margin-bottom:12px"><strong>Total a pagar: ' + money(total) + '</strong></p>';
-      
-      // Configuración de Wompi - REEMPLAZAR CON TUS CREDENCIALES REALES
-      var WOMPI_PUBLIC_KEY = 'pub_prod_XXXXXXXXXXXXXXXXXXXXXXXX'; // Tu llave pública de Wompi (producción)
-      // Para sandbox: 'pub_test_XXXXXXXXXXXXXXXXXXXXXXXX'
-      
-      if (typeof window.WompiCheckout !== 'undefined') {
-        // El widget se renderiza automáticamente via data-render="auto" en el script tag
-        // Pero podemos inicializarlo programáticamente también
-        console.log('Wompi SDK cargado');
-      }
-    }
-
-    // Paso 3: Procesar pago
-    $('#pay').addEventListener('click', async function () {
-      var payBtn = $('#pay');
-      var payError = $('#pay-error');
-      var metodoPago = $('input[name="pago"]:checked')?.value;
-      
-      if (!metodoPago) { toast('Seleccione un método de pago'); return; }
-      
-      var it = Cart.items();
-      var sub = it.reduce(function (a, x) { var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; return a + (p ? p.price * x.qty : 0); }, 0);
-      var ship = orderData.envio?.costo || 0;
-      var total = sub + ship;
-      
-      // Validar monto mínimo Wompi (100 COP = 1 peso, pero mínimo práctico ~1000)
-      if (total < 1000) {
-        payError.textContent = 'El monto mínimo es $1.000 COP';
-        payError.style.display = 'block';
-        return;
-      }
-      
-      payBtn.disabled = true;
-      payBtn.textContent = 'Procesando...';
-      payError.style.display = 'none';
-      
-      orderData.pago = {
-        metodo: metodoPago,
-        total: total,
-        subtotal: sub,
-        envio: ship,
-        items: it.map(function(x) {
-          var p = PRODUCTS.filter(function(q) { return q.id === x.id; })[0];
-          return {
-            id: p.id,
-            nombre: p.name,
-            color: x.color,
-            cantidad: x.qty,
-            precioUnitario: p.price,
-            subtotal: p.price * x.qty
-          };
-        })
-      };
-      
-      orderData.fecha = new Date().toISOString();
-      orderData.numero = 'LV-' + String(Date.now()).slice(-6);
-      orderData.estado = metodoPago === 'CONTRAENTREGA' ? 'pendiente_pago' : 'pagado';
-      
-      try {
-        if (metodoPago === 'CONTRAENTREGA' || false) {
-          // Para contraentrega o si falla Wompi, crear pedido directo
-          await procesarPedidoDirecto(orderData);
-        } else {
-          // Integración real con Wompi
-          await procesarConWompi(orderData, metodoPago, total);
-        }
-      } catch (err) {
-        console.error('Error en pago:', err);
-        payError.textContent = 'Error: ' + (err.message || 'No se pudo procesar el pago. Intente de nuevo.');
-        payError.style.display = 'block';
-        payBtn.disabled = false;
-        payBtn.textContent = metodoPago === 'CONTRAENTREGA' ? 'Confirmar pedido (pago contra entrega)' : 'Iniciar pago seguro';
-      }
-    });
-
-    async function procesarConWompi(orderData, metodoPago, total) {
-      // IMPORTANTE: Esto requiere un BACKEND para crear la transacción en Wompi
-      // El frontend NUNCA debe exponer la llave privada (integrity_key)
-      
-      var WOMPI_PUBLIC_KEY = 'pub_prod_XXXXXXXXXXXXXXXXXXXXXXXX'; // TU LLAVE PÚBLICA
-      
-      // OPCIÓN A: Usar widget de Wompi (redirect)
-      if (window.WompiCheckout) {
-        window.WompiCheckout.open({
-          publicKey: WOMPI_PUBLIC_KEY,
-          currency: 'COP',
-          amountInCents: total * 100, // Wompi usa centavos
-          reference: orderData.numero,
-          customerData: {
-            email: orderData.cliente.email,
-            fullName: orderData.cliente.nombre,
-            phoneNumber: '+57' + orderData.cliente.celular,
-            legalId: orderData.cliente.documento,
-            legalIdType: orderData.cliente.tipoDoc === 'CC' ? 'CC' : orderData.cliente.tipoDoc === 'NIT' ? 'NIT' : 'CE'
-          },
-          shippingData: {
-            address: orderData.cliente.direccion,
-            city: orderData.cliente.ciudad,
-            region: orderData.cliente.departamento,
-            country: 'CO',
-            phoneNumber: '+57' + orderData.cliente.celular
-          },
-          redirectUrl: window.location.origin + '/checkout.html?success=true&ref=' + orderData.numero,
-          singleUse: true
-        });
-        // El widget maneja el redirect. Cuando vuelve, verificamos en URL.
-        return;
-      }
-      
-      // OPCIÓN B: Crear transacción via API (requiere backend)
-      // Llamar a TU backend: POST /api/wompi/crear-transaccion
-      /*
-      var resp = await fetch('https://TU-BACKEND.com/api/wompi/crear-transaccion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amountInCents: total * 100,
-          currency: 'COP',
-          customerEmail: orderData.cliente.email,
-          reference: orderData.numero,
-          paymentMethod: { installments: 1 },
-          customerData: { ... },
-          redirectUrl: window.location.origin + '/checkout.html?success=true&ref=' + orderData.numero
-        })
-      });
-      var data = await resp.json();
-      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-      */
-      
-      // FALLBACK DEMO: Simular pago exitoso para pruebas
-      toast('Modo demo: simulando pago exitoso...');
-      setTimeout(function() { procesarPedidoDirecto(orderData); }, 1500);
-    }
-
-    async function procesarPedidoDirecto(orderData) {
-      // Guardar pedido en localStorage (historial local)
-      var historial = JSON.parse(localStorage.getItem('lv_orders') || '[]');
-      historial.unshift(orderData);
-      localStorage.setItem('lv_orders', JSON.stringify(historial.slice(0, 50)));
-      
-      // ENVIAR A WHATSAPP DEL ADMIN (tú)
-      enviarWhatsAppAdmin(orderData);
-      
-      // ENVIAR CONFIRMACIÓN AL CLIENTE (si dio consentimiento marketing)
-      if (orderData.cliente.marketingOptin) {
-        guardarParaMarketing(orderData.cliente);
-      }
-      
-      // Limpiar carrito y mostrar confirmación
-      Cart.set([]);
-      $('#order-n').textContent = orderData.numero;
-      go(4);
-    }
-
-    function enviarWhatsAppAdmin(orderData) {
-      var itemsText = orderData.pago.items.map(function(i) {
-        return '• ' + i.nombre + ' (' + i.color + ') x' + i.cantidad + ' = ' + money(i.subtotal);
-      }).join('\n');
-      
-      var msg = '🛍 *NUEVO PEDIDO ' + orderData.numero + '*\n\n' +
-        '👤 *Cliente:* ' + orderData.cliente.nombre + '\n' +
-        '📞 *WhatsApp:* +57' + orderData.cliente.celular + '\n' +
-        '📧 *Email:* ' + orderData.cliente.email + '\n' +
-        '📍 *Envío a:* ' + orderData.cliente.direccion + ', ' + orderData.cliente.ciudad + ', ' + orderData.cliente.departamento + '\n' +
-        '🚚 *Método envío:* ' + orderData.envio.metodo + ' (' + money(orderData.envio.costo) + ')\n' +
-        '💳 *Pago:* ' + orderData.pago.metodo + (orderData.pago.metodo === 'CONTRAENTREGA' ? ' (paga al recibir)' : '') + '\n\n' +
-        '*Detalle:*\n' + itemsText + '\n\n' +
-        '*Subtotal:* ' + money(orderData.pago.subtotal) + '\n' +
-        '*Envío:* ' + money(orderData.pago.envio) + '\n' +
-        '*TOTAL:* ' + money(orderData.pago.total) + '\n\n' +
-        '🕐 ' + new Date(orderData.fecha).toLocaleString('es-CO') + '\n' +
-        (orderData.cliente.marketingOptin ? '✅ Acepta marketing' : '❌ No marketing');
-      
-      var adminPhone = C.whatsapp || '57XXXXXXXXXX'; // Tu número en LV_CONFIG
-      var waUrl = 'https://wa.me/' + adminPhone + '?text=' + encodeURIComponent(msg);
-      
-      // Abrir en nueva pestaña para que el admin vea el pedido
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
-      
-      // También guardar en localStorage para panel admin.html
-      var adminOrders = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
-      adminOrders.unshift(orderData);
-      localStorage.setItem('lv_admin_orders', JSON.stringify(adminOrders.slice(0, 200)));
-    }
-
-    function guardarParaMarketing(cliente) {
-      var lista = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
-      // Evitar duplicados por email
-      if (!lista.find(function(c) { return c.email === cliente.email; })) {
-        lista.push({
-          email: cliente.email,
-          nombre: cliente.nombre,
-          celular: cliente.celular,
-          fechaRegistro: new Date().toISOString(),
-          fuente: 'checkout',
-          activo: true
-        });
-        localStorage.setItem('lv_marketing', JSON.stringify(lista));
-      }
-    }
-
-    // Verificar si venimos de retorno de Wompi (success=true en URL)
-    var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true' && urlParams.get('ref')) {
-      // Aquí deberías verificar la transacción con tu backend
-      // Por ahora simulamos éxito
-      toast('¡Pago verificado! Procesando su pedido...');
-      // orderData ya debería estar en sessionStorage o recuperarse via ref
-      setTimeout(function() { 
-        // En producción: verificar transacción con Wompi API via tu backend
-        // fetch('https://TU-BACKEND.com/api/wompi/verificar/' + urlParams.get('ref'))
-        // Si ok: procesarPedidoDirecto(orderData)
-      }, 1000);
-    }
-
-    go(1);
-  }
 
   /* ---------- Ayuda ---------- */
   function initHelp() {
@@ -709,6 +617,8 @@
   }
 
   renderChrome();
+  watchSvgs(); setTimeout(watchSvgs, 1500);
+  setTimeout(parallax, 0);
   if (page === 'home') initHome();
   if (page === 'tienda') initShop();
   if (page === 'producto') initProduct();
