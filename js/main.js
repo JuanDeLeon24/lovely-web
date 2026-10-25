@@ -24,6 +24,22 @@
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
+  var ASSET_V = '20261025b';
+  /* Logos SVG: si el servidor los envía con un tipo incorrecto, se vuelven a pedir y se muestran igual */
+  function fixSvg(img) {
+    if (img._fx) return; img._fx = 1;
+    var src = img.getAttribute('src');
+    fetch(src).then(function (r) { if (!r.ok) throw new Error(); return r.text(); }).then(function (t) {
+      if (t.indexOf('<svg') < 0) return;
+      img.setAttribute('data-src', src); img.src = URL.createObjectURL(new Blob([t], { type: 'image/svg+xml' }));
+    }).catch(function () {});
+  }
+  function watchSvgs() {
+    $$('img[src$=".svg"]').forEach(function (img) {
+      if (img.complete && img.naturalWidth === 0) fixSvg(img);
+      else img.addEventListener('error', function () { fixSvg(img); });
+    });
+  }
   var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); };
   var waLink = function (msg) { return 'https://wa.me/' + C.whatsapp + '?text=' + encodeURIComponent(msg || 'Hola Lovely, quiero más información.'); };
 
@@ -328,10 +344,19 @@
     });
     main.addEventListener('mouseleave', function () { main.classList.remove('zoom'); });
     /* Visor 3D: se carga solo cuando se pide (js/visor3d.js + Three.js en js/vendor) */
-    var dynImport; try { dynImport = new Function('u', 'return import(u)'); } catch (e) {}
+    /* Paquete clásico (no módulo): carga con cualquier servidor, aunque envíe .js como texto */
+    function loadVisor() {
+      if (window.LVVisor3D) return Promise.resolve(window.LVVisor3D);
+      return loadVisor._p || (loadVisor._p = new Promise(function (ok, ko) {
+        var sc = document.createElement('script'); sc.src = 'js/visor3d.bundle.js?v=' + ASSET_V; sc.async = true;
+        sc.onload = function () { window.LVVisor3D ? ok(window.LVVisor3D) : ko(new Error('visor')); };
+        sc.onerror = function () { loadVisor._p = null; ko(new Error('visor')); };
+        document.head.appendChild(sc);
+      }));
+    }
     function open3D() {
-      if (!dynImport) { toast('Tu navegador no permite la vista 3D.'); return; }
-      dynImport(new URL('js/visor3d.js', location.href).href)
+      toast('Cargando vista 3D…');
+      loadVisor()
         .then(function (m) { m.openViewer(p, st.color, function (i) { setColor(i); }); })
         .catch(function () { toast('No pudimos cargar la vista 3D. Intenta de nuevo.'); });
     }
@@ -425,6 +450,7 @@
   }
 
   renderChrome();
+  watchSvgs(); setTimeout(watchSvgs, 1500);
   setTimeout(parallax, 0);
   if (page === 'home') initHome();
   if (page === 'tienda') initShop();

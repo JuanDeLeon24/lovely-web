@@ -361,6 +361,11 @@
       .catch(function (err) { showLogin(errorText(err)); })
       .then(function () { btn.disabled = false; btn.textContent = 'Entrar'; });
   });
+  /* Logos SVG con tipo incorrecto del servidor: se vuelven a pedir y se muestran igual */
+  $$('img[src$=".svg"]').forEach(function (img) {
+    var fix = function () { if (img._fx) return; img._fx = 1; fetch(img.getAttribute('src')).then(function (r) { return r.text(); }).then(function (t) { if (t.indexOf('<svg') > -1) img.src = URL.createObjectURL(new Blob([t], { type: 'image/svg+xml' })); }).catch(function () {}); };
+    if (img.complete && img.naturalWidth === 0) fix(); else img.addEventListener('error', fix);
+  });
   var saved = readAuth();
   if (saved && saved.token) connect(saved).then(showApp).catch(function (err) { clearAuth(); showLogin(errorText(err)); });
   else showLogin();

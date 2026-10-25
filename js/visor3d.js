@@ -1,10 +1,11 @@
-/* Lovely · Visor 3D de relojes.
+/* Lovely · Visor 3D de relojes. Fuente del paquete js/visor3d.bundle.js (npm run build:visor).
    Modelos PBR generados por código en milímetros (Three.js r160 en js/vendor).
    Con glb: true en SPECS se carga assets/models/<id>.glb (modelo profesional) en lugar del generado.
    SPECS: medidas aproximadas por modelo y colores por variante, en el mismo orden que js/data.js.
    v: [caja, esfera, correa, acento, centro del brazalete?] */
 import * as THREE from './vendor/three.module.min.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
+import { GLTFLoader } from './vendor/GLTFLoader.js';
 
 const SPECS = {
   'reloj-t5-square': { shape: 'square', W: 44, H: 47, T: 14, LW: 24, bezel: 'screws', screws: 4, dial: 'chrono', indices: 'baton', hands: 'sword', strap: 'rubber', pushers: 2, pusherAccent: true,
@@ -935,8 +936,8 @@ export function openViewer(product, colorIndex, onColor) {
   document.addEventListener('keydown', onKey);
   resize();
   /* Modelo profesional opcional: assets/models/<id>.glb */
-  const glbUrl = new URL('../assets/models/' + product.id + '.glb', import.meta.url).href;
-  (spec.glb ? import('./vendor/GLTFLoader.js').then(m => new Promise((ok, ko) => new m.GLTFLoader().load(glbUrl, ok, undefined, ko))) : Promise.reject(new Error('sin glb'))).then(gltf => {
+  const glbUrl = new URL('assets/models/' + product.id + '.glb', document.baseURI).href;
+  (spec.glb ? new Promise((ok, ko) => new GLTFLoader().load(glbUrl, ok, undefined, ko)) : Promise.reject(new Error('sin glb'))).then(gltf => {
     glb = true; M = { root: gltf.scene, parts: [], tick: [] };
     const size = new THREE.Box3().setFromObject(gltf.scene).getSize(V(0, 0, 0)).length();
     gltf.scene.scale.setScalar(60 / size); scene.add(gltf.scene); frameModel(gltf.scene);

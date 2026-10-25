@@ -13,7 +13,7 @@
   --negro:#141414; --superficie:#1E1E1E; --grafito:#C4C4C4; --gris-claro:#1A1A1A; --texto-2:#9E9E9E; --borde:#3A3A3A; --divisor:#262626;
   --bg:#0B0B0B; --ink:#EDEDED; --surface:#141414; --header-bg:rgba(11,11,11,.94); --inv-bg:#EDEDED; --inv-fg:#111111;
 }
-:root[data-theme="dark"] img[src$="logo-negro.svg"],:root[data-theme="dark"] img[src$="isotipo-negro.svg"]{filter:invert(1)}
+:root[data-theme="dark"] img[src$="logo-negro.svg"],:root[data-theme="dark"] img[src$="isotipo-negro.svg"],:root[data-theme="dark"] img[data-src$="logo-negro.svg"],:root[data-theme="dark"] img[data-src$="isotipo-negro.svg"]{filter:invert(1)}
 :root[data-theme="dark"] .btn-gold:hover{background:#E2C25A}
 :root[data-theme="dark"] .wa-fab{box-shadow:0 6px 20px rgba(0,0,0,.6)}
 :root[data-theme="dark"] .sticky-buy{box-shadow:0 -6px 24px rgba(0,0,0,.6)}
