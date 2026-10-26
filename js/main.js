@@ -25,7 +25,7 @@
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
-  var ASSET_V = '20261026f';
+  var ASSET_V = '20261026g';
   /* Logos SVG: si el servidor los envía con un tipo incorrecto, se vuelven a pedir y se muestran igual */
   function fixSvg(img) {
     if (img._fx) return; img._fx = 1;
@@ -445,7 +445,8 @@
       var prog = (r.top + r.height / 2 - vh / 2) / vh;
       el.style.transform = 'translate3d(0,' + (prog * el._px * -100).toFixed(2) + 'px,0) scale(1.14)';
     });
-    if (SC) scShowcase(vh);
+    /* El escaparate sigue al scroll con inercia: mientras no alcance la posición, pide otro cuadro */
+    if (SC && scShowcase(vh)) { ticking = true; requestAnimationFrame(scrollFrame); }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll);
@@ -462,7 +463,7 @@
     host.innerHTML = '<div class="sc-sticky">' +
       '<div class="sc-word" aria-hidden="true">' + esc(c.name) + '</div>' +
       '<div class="sc-media">' + items.map(function (p, i) {
-        return '<a class="sc-slide" href="producto.html?id=' + p.id + '" tabindex="-1" aria-hidden="true"><img src="' + photo(p.colors[0].img) + '" alt=""' + (i ? ' loading="lazy"' : '') + '></a>';
+        return '<a class="sc-slide" href="producto.html?id=' + p.id + '" tabindex="-1" aria-hidden="true"><img src="' + photo(p.colors[0].img) + '" alt="" decoding="async"></a>';
       }).join('') + '<div class="sc-frame" aria-hidden="true"></div></div>' +
       '<div class="sc-copy">' + items.map(function (p, i) {
         var sw = p.colors.length > 1 ? '<span class="sc-sw">' + p.colors.slice(0, 6).map(function (x) { return '<i style="background:' + x.hex + '"></i>'; }).join('') + '</span>' : '';
@@ -478,7 +479,7 @@
       '<ol class="sc-dots">' + items.map(function (p, i) { return '<li><button type="button" data-i="' + i + '" aria-label="Ver ' + esc(p.name) + '"></button></li>'; }).join('') + '</ol>' +
       '<div class="sc-bar" aria-hidden="true"><span></span></div>' +
       '<div class="sc-hint" aria-hidden="true">Desliza para descubrir<i></i></div></div>';
-    SC = { host: host, n: items.length, idx: -1, slides: $$('.sc-slide', host), texts: $$('.sc-text', host), dots: $$('.sc-dots button', host) };
+    SC = { host: host, n: items.length, idx: -1, cur: null, sticky: $('.sc-sticky', host), slides: $$('.sc-slide', host).map(function (s) { s._img = $('img', s); return s; }), texts: $$('.sc-text', host), dots: $$('.sc-dots button', host) };
     $('.sc-dots', host).addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
       var i = +b.getAttribute('data-i'), top = host.getBoundingClientRect().top + window.scrollY, run = host.offsetHeight - $('.sc-sticky', host).offsetHeight;
@@ -487,20 +488,38 @@
     if (REDUCE) { SC.texts.forEach(function (t) { t.classList.add('on'); }); SC.slides.forEach(function (s) { s.classList.add('on'); }); SC = null; return; }
     onScroll();
   }
+  /* Escaparate continuo: cada foto entra con una cortina que sigue el scroll cuadro a cuadro (solo transform),
+     la anterior se hunde y se oscurece. La posición se suaviza para que la rueda del mouse no dé saltos. */
+  var SC_W = 0.7, smooth = function (t) { return t * t * (3 - 2 * t); };
   function scShowcase(vh) {
-    var r = SC.host.getBoundingClientRect(), run = SC.host.offsetHeight - $('.sc-sticky', SC.host).offsetHeight;
-    if (r.bottom < -vh || r.top > vh * 2) return;
-    var p = clamp(-r.top / run, 0, 1), f = p * SC.n, idx = Math.min(SC.n - 1, Math.floor(f));
-    SC.host.style.setProperty('--p', p.toFixed(4));
-    SC.host.style.setProperty('--t', clamp(f - idx, 0, 1).toFixed(3));
-    SC.host.classList.toggle('started', p > 0.01);
+    var r = SC.host.getBoundingClientRect(), run = SC.host.offsetHeight - SC.sticky.offsetHeight;
+    if (r.bottom < -vh || r.top > vh * 2) { SC.cur = null; return false; }
+    var target = clamp(-r.top / run, 0, 1), cur = SC.cur == null ? target : SC.cur + (target - SC.cur) * 0.14;
+    if (Math.abs(target - cur) < 0.0005) cur = target;
+    SC.cur = cur;
+    var f = cur * SC.n, idx = Math.min(SC.n - 1, Math.floor(f));
+    SC.host.style.setProperty('--p', cur.toFixed(4));
+    SC.slides.forEach(function (s, k) {
+      var e = k ? smooth(clamp((f - k + SC_W / 2) / SC_W, 0, 1)) : 1;
+      var x = k < SC.n - 1 ? smooth(clamp((f - k - 1 + SC_W / 2) / SC_W, 0, 1)) : 0;
+      if (s._f === f) return;
+      s._f = f;
+      var drift = (0.5 - clamp(f - k, -0.5, 1.5)) * 2.5;
+      s.style.transform = 'translate3d(0,' + ((1 - e) * 100).toFixed(3) + '%,0)';
+      s._img.style.transform = 'translate3d(0,' + (-(1 - e) * 82 - x * 18 + drift).toFixed(3) + '%,0) scale(' + (1.04 + (1 - e) * 0.12 + x * 0.04).toFixed(4) + ')';
+      s._img.style.opacity = (1 - x * 0.55).toFixed(3);
+    });
+    SC.host.classList.toggle('started', cur > 0.01);
     document.body.classList.toggle('sc-active', r.top <= 0 && r.bottom > vh * 0.6);
-    if (idx === SC.idx) return;
-    SC.idx = idx;
-    SC.slides.forEach(function (s, i) { s.classList.toggle('on', i === idx); s.classList.toggle('past', i < idx); s.setAttribute('tabindex', i === idx ? '0' : '-1'); });
-    SC.texts.forEach(function (t, i) { t.classList.toggle('on', i === idx); t.classList.toggle('past', i < idx); t.setAttribute('aria-hidden', i === idx ? 'false' : 'true'); $$('a', t).forEach(function (a) { a.tabIndex = i === idx ? 0 : -1; }); });
-    SC.dots.forEach(function (d, i) { d.setAttribute('aria-current', i === idx ? 'true' : 'false'); });
+    if (idx !== SC.idx) {
+      SC.idx = idx;
+      SC.slides.forEach(function (s, i) { s.classList.toggle('on', i === idx); s.setAttribute('tabindex', i === idx ? '0' : '-1'); });
+      SC.texts.forEach(function (t, i) { t.classList.toggle('on', i === idx); t.classList.toggle('past', i < idx); t.setAttribute('aria-hidden', i === idx ? 'false' : 'true'); $$('a', t).forEach(function (a) { a.tabIndex = i === idx ? 0 : -1; }); });
+      SC.dots.forEach(function (d, i) { d.setAttribute('aria-current', i === idx ? 'true' : 'false'); });
+    }
+    return cur !== target;
   }
+
 
   /* ---------- Home ---------- */
   function initHome() {
