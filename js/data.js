@@ -13,87 +13,45 @@ window.LV_CONFIG = {
   "cambiosDias": "30",
   "garantiaDias": "365",
   "email": "Lovelyaccesorios182@gmail.com",
-  // SEO y metadatos globales
   "seoTitle": "Lovely | Gorras, gafas y relojes con estilo en Colombia",
   "seoDescription": "Accesorios de moda: relojes, gorras y gafas. Envíos a toda Colombia. Compra fácil por WhatsApp, con envío a todo el país. Garantía y cambios fáciles.",
   "seoKeywords": "relojes, gorras, gafas, accesorios, moda, Colombia, Lovely",
-  // Hero principal (index.html)
   "heroTitulo": "Pequeños detalles, grandes estilos",
   "heroSubtitulo": "Seleccionamos cada accesorio pensando en personas que quieren destacar sin decir una palabra. Diseño, originalidad y confianza en cada detalle.",
   "heroBotonTexto": "Comprar ahora",
   "heroBotonLink": "tienda.html",
   "heroImagen": "assets/img/hero-main.webp",
-  // Nosotros
   "nosotrosTitulo": "Nuestra historia",
   "nosotrosTexto": "Lovely nace en 2022 con una idea simple: los accesorios no son un complemento, son la firma de tu estilo. Cada reloj, gorra y gafa que seleccionamos pasa por un filtro de diseño, calidad y autenticidad. No vendemos catálogo, curamos piezas que enamoran.",
   "nosotrosImagen": "assets/img/nosotros.webp",
-  // Promociones activas (banner superior, popups, etc.)
   "promociones": [
-    {"id":"envio-gratis","tipo":"banner","activo":true,"titulo":"ENVÍO GRATIS","texto":"En pedidos superiores a $200.000 COP","color":"#111111","textoColor":"#D4AF37"},
-    {"id":"primera-compra","tipo":"popup","activo":false,"titulo":"¡BIENVENIDO!","texto":"Suscríbete y obtén 10% OFF en tu primera compra","color":"#D4AF37","textoColor":"#111111","codigo":"WELCOME10"}
+    {
+      "id": "envio-gratis",
+      "tipo": "banner",
+      "activo": true,
+      "titulo": "ENVÍO GRATIS",
+      "texto": "En pedidos superiores a $200.000 COP",
+      "color": "#111111",
+      "textoColor": "#D4AF37"
+    },
+    {
+      "id": "primera-compra",
+      "tipo": "popup",
+      "activo": false,
+      "titulo": "¡BIENVENIDO!",
+      "texto": "Suscríbete y obtén 10% OFF en tu primera compra",
+      "color": "#D4AF37",
+      "textoColor": "#111111",
+      "codigo": "WELCOME10"
+    }
   ]
 };
 
 window.LV_CATEGORIES = [
-  {"slug":"relojes","name":"Relojes","icon":"reloj","cover":"reloj-t5-square-1"},
+  {"slug":"relojes","name":"Relojes","icon":"reloj","cover":"reloj-richard-mille-1"},
   {"slug":"gorras","name":"Gorras","icon":"gorra","cover":"gorra-oval-premium-1"},
   {"slug":"gafas","name":"Gafas","icon":"gafas","cover":"gafas-club-classic-2"}
 ];
-
-// Preguntas frecuentes editables desde admin
-window.LV_FAQS = [
-  {"categoria":"pagos","orden":1,"pregunta":"¿Cómo puedo comprar?","respuesta":"Armas tu pedido en la web y lo confirmas por WhatsApp. Allí coordinamos el pago (Nequi, transferencia o contra entrega) y el envío."},
-  {"categoria":"pagos","orden":2,"pregunta":"¿Es seguro comprar en la web?","respuesta":"Sí. No pedimos ni almacenamos datos de tarjeta. Solo usamos tus datos de contacto y envío para gestionar el pedido, con tu autorización (Ley 1581/2012)."},
-  {"categoria":"pagos","orden":3,"pregunta":"¿Puedo pagar contra entrega?","respuesta":"Sí, disponible en ciudades principales con cobertura de Inter Rapidísimo. Tiene un costo adicional de $15.000 COP. Verifica en el checkout si tu ciudad aplica."},
-  {"categoria":"envios","orden":1,"pregunta":"¿Hacen envíos a toda Colombia?","respuesta":"Sí, enviamos a todo el país a través de Inter Rapidísimo y Servientrega. Llegamos a más de 1.100 municipios."},
-  {"categoria":"envios","orden":2,"pregunta":"¿Cuánto tarda mi pedido?","respuesta":"Ciudades principales: 2–3 días hábiles. Resto del país: 3–5 días hábiles. Zonas de difícil acceso: hasta 7 días hábiles."},
-  {"categoria":"envios","orden":3,"pregunta":"¿Cuánto cuesta el envío?","respuesta":"Envío estándar: $12.000 COP. Express: $18.000 COP. Contra entrega: $15.000 COP. <strong>Envío gratis en pedidos mayores a $200.000 COP.</strong> El costo exacto se calcula en el checkout según tu ciudad."},
-  {"categoria":"garantias","orden":1,"pregunta":"¿Mis productos tienen garantía?","respuesta":"Sí. Todos los productos tienen garantía legal de <strong>1 año (365 días)</strong> por defectos de fabricación (Ley 1480/2011). Relojes y gafas: 1 año. Gorras y textiles: 6 meses."},
-  {"categoria":"garantias","orden":2,"pregunta":"¿Cómo hago efectiva la garantía?","respuesta":"Escríbenos por WhatsApp con tu número de pedido, fotos del producto y descripción del problema. Te respondemos en <24h y coordinamos el cambio o reparación sin costo si aplica garantía."},
-  {"categoria":"cambios","orden":1,"pregunta":"¿Puedo cambiar un producto?","respuesta":"Sí, dentro de <strong>30 días</strong> después de recibirlo. El producto debe estar sin uso, con etiquetas, empaque original y en perfectas condiciones."},
-  {"categoria":"cambios","orden":2,"pregunta":"¿Quién paga el envío del cambio?","respuesta":"Por cambio de talla/color/gusto: el cliente cubre el envío de ida ($12.000). Por defecto de fábrica o error nuestro: Lovely cubre ambos envíos."},
-  {"categoria":"cambios","orden":3,"pregunta":"¿Cómo solicito un cambio?","respuesta":"Escríbenos por WhatsApp con tu número de pedido y el motivo. Te enviamos la guía de devolución y coordinamos el envío del nuevo producto."}
-];
-
-// Descuentos y códigos promocionales
-window.LV_DISCOUNTS = [
-  {"id":"welcome10","codigo":"WELCOME10","tipo":"porcentaje","valor":10,"descripcion":"10% descuento primera compra","activo":true,"usosMax":1,"usosActuales":0,"fechaInicio":"2026-01-01","fechaFin":"2027-12-31","minCompra":0,"aplicaA":"todo"},
-  {"id":"envio-gratis-200k","codigo":null,"tipo":"envio_gratis","valor":0,"descripcion":"Envío gratis pedidos >$200k","activo":true,"usosMax":null,"usosActuales":0,"fechaInicio":"2026-01-01","fechaFin":"2027-12-31","minCompra":200000,"aplicaA":"todo"}
-];
-
-// Contenido de páginas editables
-window.LV_PAGES = {
-  "index": {
-    "hero": {"titulo":"Pequeños detalles, grandes estilos","subtitulo":"Seleccionamos cada accesorio pensando en personas que quieren destacar sin decir una palabra. Diseño, originalidad y confianza en cada detalle.","btnTexto":"Comprar ahora","btnLink":"tienda.html","imagen":"assets/img/hero-main.webp"},
-    "stats": [
-      {"icon":"📦","numero":"1.000+","label":"Clientes felices"},
-      {"icon":"🚚","numero":"100%","label":"Cobertura Colombia"},
-      {"icon":"🔒","numero":"Seguro","label":"Pago protegido"},
-      {"icon":"🔄","numero":"30 días","label":"Cambios fáciles"}
-    ],
-    "promo": {"titulo":"Colección Destacada","subtitulo":"Nuestros favoritos de la temporada","imagen":"assets/img/promo-main.webp","btnTexto":"Ver colección","btnLink":"tienda.html?cat=relojes"}
-  },
-  "nosotros": {
-    "hero": {"titulo":"Nuestra historia","subtitulo":"Pequeños detalles, grandes estilos","imagen":"assets/img/nosotros.webp"},
-    "historia": "Lovely nace en 2022 con una idea simple: los accesorios no son un complemento, son la firma de tu estilo. Cada reloj, gorra y gafa que seleccionamos pasa por un filtro de diseño, calidad y autenticidad. No vendemos catálogo, curamos piezas que enamoran.",
-    "valores": [
-      {"icon":"✨","titulo":"Curación real","texto":"Probamos y seleccionamos cada pieza. Si no nos gusta a nosotros, no la vendemos."},
-      {"icon":"🤝","titulo":"Confianza total","texto":"Garantía real, cambios fáciles, atención por WhatsApp. Sin letra chica."},
-      {"icon":"🇨🇴","titulo":"Hecho en Colombia","texto":"Operamos desde Medellín, enviamos a todo el país, generamos empleo local."}
-    ],
-    "equipo": [
-      {"nombre":"Juan Pérez","rol":"Fundador & CEO","foto":"assets/img/team-1.webp"},
-      {"nombre":"María Gómez","rol":"Directora de Producto","foto":"assets/img/team-2.webp"},
-      {"nombre":"Carlos Ruiz","rol":"Experiencia del Cliente","foto":"assets/img/team-3.webp"}
-    ]
-  },
-  "contacto": {
-    "hero": {"titulo":"Hablemos","subtitulo":"Estamos para ayudarte. Respuesta por WhatsApp en minutos.","imagen":""},
-    "horario": "Lunes a Viernes: 8:00 AM – 6:00 PM · Sábados: 9:00 AM – 1:00 PM",
-    "direccion": "Medellín, Antioquia · Colombia",
-    "email": "Lovelyaccesorios182@gmail.com"
-  }
-};
 
 window.LV_PRODUCTS = [
   {"id":"gorra-oval-premium","name":"Gorra Oval Premium","brand":"Lovely","cat":"gorras","badge":"Más vendido","top":true,"nuevo":false,"stock":10,"price":50000,"desc":"Gorra de béisbol con logo ovalado en relieve y ajuste trasero. Acabado premium y estructura firme.","colors":[{"name":"Gris","hex":"#9E9E9E","img":"gorra-oval-premium-1"},{"name":"Café","hex":"#6B4F3A","img":"gorra-oval-premium-2"},{"name":"Negro","hex":"#111111","img":"gorra-oval-premium-3"},{"name":"Plateado","hex":"#C0C0C0","img":"gorra-oval-premium-4"}],"extra":["gorra-oval-premium-5"],"modelo3d":false},
@@ -147,5 +105,5 @@ window.LV_PRODUCTS = [
   {"id":"reloj-bariu-estuche","name":"Reloj Bariu con Estuche","brand":"Bariu","cat":"relojes","badge":"","top":false,"nuevo":false,"stock":10,"price":90000,"desc":"Reloj Bariu con estuche de regalo. Detalle listo para sorprender.","colors":[{"name":"Dorado","hex":"#C9A227","img":"reloj-bariu-estuche-1"},{"name":"Dorado clásico","hex":"#C9A227","img":"reloj-bariu-estuche-2"}],"extra":[],"modelo3d":false},
   {"id":"reloj-square-luxury","name":"Reloj Square Luxury","brand":"Lovely","cat":"relojes","badge":"","top":false,"nuevo":false,"stock":10,"price":90000,"desc":"Caja cuadrada con acabado metálico y detalles de lujo. Presencia inmediata.","colors":[{"name":"Dorado","hex":"#C9A227","img":"reloj-square-luxury-1"},{"name":"Verde","hex":"#2F5D3A","img":"reloj-square-luxury-2"},{"name":"Dorado y negro","hex":"#C9A227","img":"reloj-square-luxury-3"},{"name":"Plata","hex":"#C0C0C0","img":"reloj-square-luxury-4"},{"name":"Dorado y verde","hex":"#C9A227","img":"reloj-square-luxury-5"}],"extra":[],"modelo3d":false},
   {"id":"reloj-richard-mille","name":"Reloj Richard Mille","brand":"Richard Mille","cat":"relojes","badge":"Nuevo","top":false,"nuevo":true,"stock":10,"price":90000,"desc":"Caja tonneau esqueletada y correa de caucho. Diseño de alta relojería.","colors":[{"name":"Negro y dorado","hex":"#1A1A1A","img":"reloj-richard-mille-1"},{"name":"Negro","hex":"#111111","img":"reloj-richard-mille-2"},{"name":"Negro mate","hex":"#111111","img":"reloj-richard-mille-3"},{"name":"Negro brillante","hex":"#111111","img":"reloj-richard-mille-4"},{"name":"Plata","hex":"#C0C0C0","img":"reloj-richard-mille-5"},{"name":"Dorado","hex":"#C9A227","img":"reloj-richard-mille-6"}],"extra":[],"modelo3d":false},
-  {"id":"reloj-skmei-chrono","name":"Reloj SKMEI Chrono","brand":"SKMEI","cat":"relojes","badge":"","top":false,"nuevo":false,"stock":10,"price":90000,"desc":"Cronógrafo de acero con esfera trabajada. Deporte y precisión.","colors":[{"name":"Plata","hex":"#C0C0C0","img":"reloj-skmei-chrono-1"},{"name":"Dorado","hex":"#C9A227","img":"reloj-skmei-chrono-2"},{"name":"Dorado y negro","hex":"#C9A227","img":"reloj-skmei-chrono-3"},{"name":"Blanco y rojo","hex":"#F2F2F2","img":"reloj-skmei-chrono-4"}],"extra":[],"modelo3d":false},
+  {"id":"reloj-skmei-chrono","name":"Reloj SKMEI Chrono","brand":"SKMEI","cat":"relojes","badge":"","top":false,"nuevo":false,"stock":10,"price":90000,"desc":"Cronógrafo de acero con esfera trabajada. Deporte y precisión.","colors":[{"name":"Plata","hex":"#C0C0C0","img":"reloj-skmei-chrono-1"},{"name":"Dorado","hex":"#C9A227","img":"reloj-skmei-chrono-2"},{"name":"Dorado y negro","hex":"#C9A227","img":"reloj-skmei-chrono-3"},{"name":"Blanco y rojo","hex":"#F2F2F2","img":"reloj-skmei-chrono-4"}],"extra":[],"modelo3d":false}
 ];
