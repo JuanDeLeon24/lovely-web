@@ -24,7 +24,7 @@
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
-  var ASSET_V = '20261026b';
+  var ASSET_V = '20261026c';
   /* Logos SVG: si el servidor los envía con un tipo incorrecto, se vuelven a pedir y se muestran igual */
   function fixSvg(img) {
     if (img._fx) return; img._fx = 1;
@@ -42,6 +42,28 @@
   }
   var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); };
   var waLink = function (msg) { return 'https://wa.me/' + C.whatsapp + '?text=' + encodeURIComponent(msg || 'Hola Lovely, quiero más información.'); };
+  /* WhatsApp: en celulares abre la app directamente (whatsapp://send), sin la página intermedia de wa.me
+     que pide «abrir aplicación» o descargar la APK. Si la app no está instalada, a los 2 s usa wa.me.
+     En computador se mantiene wa.me en una pestaña nueva (WhatsApp Web o de escritorio). */
+  var IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+  window.lvNavigate = window.lvNavigate || function (u) { location.href = u; };
+  function openWhatsApp(url) {
+    if (!IS_MOBILE) { window.open(url, '_blank', 'noopener'); return; }
+    var u = new URL(url), text = u.searchParams.get('text');
+    var deep = 'whatsapp://send?phone=' + u.pathname.replace(/\D/g, '') + (text ? '&text=' + encodeURIComponent(text) : '');
+    var left = false, mark = function () { left = true; };
+    var onVis = function () { if (document.hidden) { mark(); document.removeEventListener('visibilitychange', onVis); } };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('pagehide', mark, { once: true });
+    window.addEventListener('blur', mark, { once: true });
+    window.lvNavigate(deep);
+    setTimeout(function () { document.removeEventListener('visibilitychange', onVis); if (!left) window.lvNavigate(url); }, 2000);
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="https://wa.me/"]');
+    if (!a || !IS_MOBILE || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey) return;
+    e.preventDefault(); openWhatsApp(a.href);
+  });
 
   /* ---------- Almacenamiento seguro ---------- */
   function load(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
@@ -503,8 +525,8 @@
       if (!Cart.items().length) { toast('Tu carrito está vacío.'); return; }
       if (!envioSel()) { toast('Elige un método de envío.'); return; }
       var o = buildOrder(); writePending(o);
-      window.open(waOrderUrl(o), '_blank', 'noopener');
       showPending(o);
+      openWhatsApp(waOrderUrl(o));
     });
 
     /* Paso 3 → 4: solo aquí el pedido queda registrado y se vacía el carrito */
