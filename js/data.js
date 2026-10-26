@@ -113,6 +113,7 @@ window.LV_PRODUCTS = [
   {"id":"reloj-skmei-chrono","name":"Reloj SKMEI Chrono","brand":"SKMEI","cat":"relojes","badge":"","top":false,"nuevo":false,"stock":10,"price":90000,"desc":"Cronógrafo de acero con esfera trabajada. Deporte y precisión.","colors":[{"name":"Plata","hex":"#C0C0C0","img":"reloj-skmei-chrono-1"},{"name":"Dorado","hex":"#C9A227","img":"reloj-skmei-chrono-2"},{"name":"Dorado y negro","hex":"#C9A227","img":"reloj-skmei-chrono-3"},{"name":"Blanco y rojo","hex":"#F2F2F2","img":"reloj-skmei-chrono-4"}],"extra":[],"modelo3d":false}
 ];
 
+/* Combos «Arma tu look»: productos que hacen juego, descuento (%) y fecha de fin (hasta). */
 window.LV_COMBOS = [
   {"id":"look-noche","nombre":"Look Noche Urbana","lema":"Negro total, actitud total.","productos":[{"id":"gorra-minimal","color":"Negro"},{"id":"gafas-club-classic","color":"Negro"},{"id":"reloj-naviforce-dual","color":"Negro"}],"descuento":12,"hasta":"2026-11-30","cupos":15,"activo":true},
   {"id":"dorado-lujo","nombre":"Dorado de Lujo","lema":"Brilla en cada detalle.","productos":[{"id":"gorra-logo-dorado","color":"Negro"},{"id":"gafas-club-classic","color":"Carey"},{"id":"reloj-cason-gold","color":"Dorado"}],"descuento":12,"hasta":"2026-11-30","cupos":15,"activo":true},
@@ -122,10 +123,12 @@ window.LV_COMBOS = [
   {"id":"atrevido","nombre":"Estilo Atrevido","lema":"Para los que no pasan desapercibidos.","productos":[{"id":"gorra-cruz","color":"Negro y rojo"},{"id":"gafas-sport-shield","color":"Fuego espejo"},{"id":"reloj-skmei-skull","color":"Rojo"}],"descuento":12,"hasta":"2026-11-30","cupos":25,"activo":true}
 ];
 
+/* Códigos de descuento que el cliente escribe en el carrito. */
 window.LV_CODES = [
-  {"codigo":"WELCOME10","descripcion":"Bienvenida: 10% en la primera compra","tipo":"porcentaje","valor":10,"minimo":0,"vence":"","activo":false}
+  {"codigo":"WELCOME5","descripcion":"Bienvenida: 5% en la primera compra","tipo":"porcentaje","valor":5,"minimo":100000,"vence":"","activo":false}
 ];
 
+/* Preguntas frecuentes de la página Ayuda. */
 window.LV_FAQS = [
   {"categoria":"pagos","pregunta":"¿Cómo puedo comprar?","respuesta":"Armas tu pedido en la web (carrito) y lo envías por WhatsApp con el botón <strong>“Confirmar y abrir WhatsApp”</strong>. Allí nuestro equipo confirma disponibilidad, total y forma de pago.","orden":1},
   {"categoria":"pagos","pregunta":"¿Qué medios de pago aceptan?","respuesta":"Coordinamos el pago por WhatsApp: Nequi, transferencia bancaria y pago contra entrega (según cobertura). No pedimos datos de tarjeta en la web.","orden":2},
