@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css?v=20261026c">
+<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css?v=20261026d">
 </head>
 <body data-page="checkout" class="co-body">
 <header class="co-header"><div class="wrap">
@@ -106,8 +106,16 @@
     <aside class="panel summary" aria-label="Resumen del pedido">
       <h2>TU PEDIDO</h2>
             <div id="lines" class="lines"></div>
+      <form class="code-form" id="code-form" novalidate>
+        <label class="sr-only" for="code">Código de descuento</label>
+        <input id="code" autocomplete="off" placeholder="Código de descuento">
+        <button class="btn btn-outline" type="submit">Aplicar</button>
+      </form>
+      <p class="note code-msg" id="code-msg" role="status" hidden></p>
       <div class="totals">
         <div><span>Subtotal</span><span id="t-sub"></span></div>
+        <div class="saving" id="row-combo" hidden><span>Ahorro en combos</span><span id="t-combo"></span></div>
+        <div class="saving" id="row-code" hidden><span id="t-code-label">Descuento</span><span id="t-code"></span></div>
         <div><span>Envío</span><span id="t-ship"></span></div>
         <div class="grand"><span>Total</span><span id="t-total"></span></div>
       </div>
@@ -116,7 +124,7 @@
   </div>
 </main>
 <div id="site-footer"></div>
-<script src="js/data.js?v=20261026c"></script>
-<script src="js/main.js?v=20261026c"></script>
+<script src="js/data.js?v=20261026d"></script>
+<script src="js/main.js?v=20261026d"></script>
 </body>
 </html>

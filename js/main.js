@@ -21,10 +21,11 @@
   };
   var icon = function (name, tone) { return 'assets/icons/' + name + '-' + (tone || 'gris') + '.svg'; };
   var catOf = function (slug) { return CATS.filter(function (c) { return c.slug === slug; })[0] || CATS[0]; };
+  var findProduct = function (id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; };
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
-  var ASSET_V = '20261026c';
+  var ASSET_V = '20261026d';
   /* Logos SVG: si el servidor los envía con un tipo incorrecto, se vuelven a pedir y se muestran igual */
   function fixSvg(img) {
     if (img._fx) return; img._fx = 1;
@@ -78,6 +79,12 @@
       if (f) f.qty += qty; else it.push({ id: id, color: color, qty: qty });
       Cart.set(it);
     },
+    /* Combo: una línea con los productos y colores elegidos; el precio con descuento se calcula al mostrarlo */
+    addCombo: function (id, colors, qty) {
+      var it = Cart.items(), key = colors.join('|'), f = it.filter(function (x) { return x.combo === id && (x.colors || []).join('|') === key; })[0];
+      if (f) f.qty += qty; else it.push({ combo: id, colors: colors, qty: qty });
+      Cart.set(it);
+    },
     remove: function (i) { var it = Cart.items(); it.splice(i, 1); Cart.set(it); },
     count: function () { return Cart.items().reduce(function (a, x) { return a + x.qty; }, 0); },
     badge: function () { $$('.cart-count').forEach(function (b) { var n = Cart.count(); b.textContent = n; b.setAttribute('data-n', n); }); }
@@ -92,15 +99,64 @@
 
   /* ---------- Header / footer compartidos ---------- */
   function navLinks() {
+    var lc = liveCombos();
     return '<a href="tienda.html?filtro=nuevos">Novedades</a>' + CATS.map(function (c) {
       return '<a href="tienda.html?cat=' + c.slug + '">' + c.name + '</a>';
-    }).join('');
+    }).join('') + (lc.length ? '<a class="nav-hot" href="combo.html">Combos <span>−' + Math.max.apply(null, lc.map(function (x) { return +x.c.descuento || 0; })) + '%</span></a>' : '');
+  }
+  /* Textos editables desde el panel (Páginas): cualquier elemento con data-cfg="clave" toma el texto de LV_CONFIG */
+  function applyTexts() {
+    $$('[data-cfg]').forEach(function (el) { var v = C[el.getAttribute('data-cfg')]; if (v) el.textContent = v; });
+  }
+  /* Promociones activas (panel → Promociones) */
+  var promos = function (tipo) { return (C.promociones || []).filter(function (x) { return x.activo && (!tipo || x.tipo === tipo) && (!x.hasta || new Date(x.hasta + 'T23:59:59') > new Date()); }); };
+  function announceMsgs() {
+    var m = [{ t: C.anuncioTitulo || 'ENVÍOS A TODA COLOMBIA', x: C.anuncioTexto }];
+    promos().forEach(function (pr) { if (pr.tipo === 'banner' || pr.tipo === 'envio') m.unshift({ t: pr.titulo, x: pr.texto, href: pr.enlace }); });
+    return m;
+  }
+  function announceHtml(a) { return '<b>' + esc(a.t) + '</b>' + (a.x ? ' · ' + esc(a.x) : '') + (a.href ? ' <u>Ver más</u>' : ''); }
+  function rotateAnnounce() {
+    var bar = $('.announce'), m = announceMsgs(); if (!bar || m.length < 2) return;
+    var i = 0;
+    setInterval(function () {
+      if (document.hidden) return;
+      i = (i + 1) % m.length; bar.classList.add('swap');
+      setTimeout(function () { bar.innerHTML = '<span>' + announceHtml(m[i]) + '</span>'; bar.classList.remove('swap'); setHref(m[i]); }, REDUCE ? 0 : 280);
+    }, 4500);
+    function setHref(a) { bar.onclick = a.href ? function () { location.href = a.href; } : null; bar.classList.toggle('link', !!a.href); }
+    setHref(m[0]);
+  }
+  /* Ventana emergente: se muestra una sola vez por visitante y por promoción */
+  function promoPopup() {
+    var pr = promos('popup')[0]; if (!pr || page === 'checkout') return;
+    var key = 'lv_popup_' + (pr.id || 'x'); try { if (localStorage.getItem(key)) return; } catch (e) { return; }
+    setTimeout(function () {
+      var d = document.createElement('div'); d.className = 'promo-pop'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', pr.titulo);
+      d.innerHTML = '<div class="pp-card"><button class="icon-btn pp-x" aria-label="Cerrar">' + I.close + '</button>' +
+        '<img src="assets/img/monograma-dorado.svg" alt="" class="pp-logo"><div class="eyebrow gold">Solo para ti</div><h2>' + esc(pr.titulo) + '</h2><p>' + esc(pr.texto) + '</p>' +
+        (pr.codigo ? '<button class="pp-code" type="button" title="Copiar código"><span>' + esc(pr.codigo) + '</span><small>Toca para copiar</small></button>' : '') +
+        '<a class="btn btn-gold btn-block" href="' + esc(pr.enlace || 'tienda.html') + '">' + esc(pr.boton || 'Ver la tienda') + '</a></div>';
+      document.body.appendChild(d);
+      try { localStorage.setItem(key, '1'); } catch (e) {}
+      requestAnimationFrame(function () { d.classList.add('open'); });
+      var close = function () { d.classList.remove('open'); setTimeout(function () { d.remove(); }, 300); };
+      $('.pp-x', d).addEventListener('click', close);
+      d.addEventListener('click', function (e) { if (e.target === d) close(); });
+      document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', k); } });
+      var cb = $('.pp-code', d);
+      if (cb) cb.addEventListener('click', function () {
+        try { navigator.clipboard.writeText(pr.codigo).catch(function () {}); } catch (e) {}
+        try { sessionStorage.setItem('lv_code', String(pr.codigo).toUpperCase()); } catch (e) {}
+        $('small', cb).textContent = '¡Copiado! Se aplica solo al pagar';
+      });
+    }, 3500);
   }
   function renderChrome() {
     var h = $('#site-header');
     if (h) {
       h.outerHTML =
-        '<div class="announce"><b>' + esc(C.anuncioTitulo || 'ENVÍOS A TODA COLOMBIA') + '</b>' + (C.anuncioTexto ? ' · ' + esc(C.anuncioTexto) : '') + '</div>' +
+        '<div class="announce" aria-live="polite"><span>' + announceHtml(announceMsgs()[0]) + '</span></div>' +
         '<header class="header"><div class="wrap">' +
         '<button class="icon-btn menu-btn" aria-label="Abrir menú" aria-expanded="false">' + I.menu + '</button>' +
         '<a class="logo" href="index.html" aria-label="Lovely, ir al inicio"><img src="assets/img/logo-negro.svg" alt="LV Accesorios" width="292" height="71"></a>' +
@@ -128,8 +184,9 @@
     if (f) {
       f.outerHTML =
         '<footer class="footer"><div class="wrap">' +
-        '<div class="news"><div><h3>Sé el primero en conocer los lanzamientos</h3><p>Novedades, colecciones y acceso anticipado. Sin spam.</p></div>' +
-        '<form class="js-news"><label class="sr-only" for="nl">Correo electrónico</label><input id="nl" type="email" required placeholder="Tu correo electrónico"><button type="submit">SUSCRIBIRME</button></form></div>' +
+        '<div class="news"><div><h3>Sé el primero en conocer los lanzamientos</h3><p>Novedades, combos y ofertas por WhatsApp o correo, solo cuando haya algo nuevo. Te das de baja cuando quieras.</p></div>' +
+        '<form class="js-news"><label class="sr-only" for="nl-n">Tu nombre</label><input id="nl-n" name="nombre" required placeholder="Tu nombre" autocomplete="given-name">' +
+        '<label class="sr-only" for="nl">Correo electrónico</label><input id="nl" name="email" type="email" placeholder="Tu correo (opcional)" autocomplete="email"><button type="submit">SUSCRIBIRME</button></form></div>' +
         '<div class="foot-cols"><div class="foot-brand"><img src="assets/img/logo-blanco.svg" alt="LV Accesorios" width="292" height="71" style="width:auto"><p>Pequeños detalles, grandes estilos.</p></div>' +
         '<div><h4>TIENDA</h4>' + CATS.slice(0, 4).map(function (c) { return '<a href="tienda.html?cat=' + c.slug + '">' + c.name + '</a>'; }).join('') + '</div>' +
         '<div><h4>AYUDA</h4><a href="ayuda.html">Preguntas frecuentes</a><a href="ayuda.html#envios">Envíos y entregas</a><a href="ayuda.html#garantias">Cambios y garantías</a><a href="ayuda.html#contacto">Contacto</a></div>' +
@@ -139,11 +196,19 @@
         '<a class="wa-fab" href="' + waLink() + '" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp" style="color:#D4AF37">' + I.wa + '</a>';
     }
     $$('.js-news').forEach(function (form) {
-      form.addEventListener('submit', function (e) { e.preventDefault(); form.reset(); toast('¡Gracias! Te avisaremos de los lanzamientos.'); });
+      /* La suscripción llega como mensaje de WhatsApp a la tienda; desde el panel (Marketing) se pega y queda registrada */
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var n = form.elements.nombre.value.trim(), m = form.elements.email.value.trim();
+        if (!n) { form.elements.nombre.focus(); return; }
+        openWhatsApp(waLink('*SUSCRIPCIÓN A NOVEDADES*\nNombre: ' + n + (m ? '\nCorreo: ' + m : '') + '\nQuiero recibir novedades y ofertas de Lovely por WhatsApp' + (m ? ' y correo' : '') + '.'));
+        form.reset(); toast('¡Gracias! Envía el mensaje en WhatsApp para quedar suscrito.');
+      });
     });
     $$('[data-social]').forEach(function (a) { a.href = C[a.getAttribute('data-social')]; a.target = '_blank'; a.rel = 'noopener'; });
     $$('[data-wa]').forEach(function (a) { a.href = waLink(a.getAttribute('data-wa')); a.target = '_blank'; a.rel = 'noopener'; });
-    Cart.badge();
+    if (page === 'combo') $$('.nav-hot').forEach(function (a) { a.setAttribute('aria-current', 'page'); });
+    Cart.badge(); rotateAnnounce(); promoPopup();
   }
 
   /* ---------- Tarjeta de producto ---------- */
@@ -154,6 +219,129 @@
       '<div class="ph photo"><img src="' + photo(p.colors[0].img, true) + '" alt="' + p.name + '" loading="lazy" width="480" height="560">' + (p.badge ? '<span class="badge">' + p.badge + '</span>' : '') + (p.modelo3d ? '<span class="chip-3d" title="Disponible en 3D">3D</span>' : '') + '</div>' + sw +
       '<div class="stock"><span class="dot"></span>' + (p.stock === 0 ? 'Agotado' : p.stock <= 4 ? 'Últimas unidades' : 'Disponible') + '</div>' +
       '<div class="name">' + p.name + '</div><div class="cat">' + c.name + (p.colors.length > 1 ? ' · ' + p.colors.length + ' colores' : '') + '</div><div class="price">' + money(p.price) + '</div></a>';
+  }
+
+  /* ---------- Combos «Arma tu look» (panel → Combos) ----------
+     Cada combo une productos que hacen juego con un descuento (12 % por defecto) hasta una fecha.
+     Vencido, desactivado o con algún producto agotado deja de mostrarse; en el carrito se cobra sin descuento. */
+  var COMBOS = window.LV_COMBOS || [];
+  function comboById(id) { return COMBOS.filter(function (c) { return c.id === id; })[0]; }
+  function comboInfo(c, colors) {
+    if (!c || !c.productos || !c.productos.length) return null;
+    var items = c.productos.map(function (x, i) {
+      var p = findProduct(x.id); if (!p) return null;
+      var col = (colors && colors[i]) || x.color;
+      if (!p.colors.some(function (k) { return k.name === col; })) col = p.colors[0].name;
+      return { p: p, color: col };
+    });
+    if (items.some(function (x) { return !x; })) return null;
+    var sum = items.reduce(function (a, x) { return a + (x.p.price || 0); }, 0), d = +c.descuento || 0;
+    var final = Math.round(sum * (100 - d) / 10000) * 100;
+    var end = c.hasta ? new Date(c.hasta + 'T23:59:59') : null;
+    var live = c.activo !== false && sum > 0 && (!end || end > new Date()) && items.every(function (x) { return x.p.stock !== 0; });
+    return { c: c, items: items, sum: sum, final: final, save: sum - final, end: end, live: live };
+  }
+  function liveCombos() { return COMBOS.map(function (c) { return comboInfo(c); }).filter(function (x) { return x && x.live; }); }
+  var catShort = function (p) { return { relojes: 'Reloj', gorras: 'Gorra', gafas: 'Gafas' }[p.cat] || catOf(p.cat).name; };
+  function countdownHtml(end) {
+    if (!end) return '';
+    return '<div class="cd" data-end="' + end.getTime() + '" role="timer" aria-label="Tiempo restante de la oferta">' +
+      ['días', 'horas', 'min', 'seg'].map(function (u) { return '<span><b>00</b><small>' + u + '</small></span>'; }).join('') + '</div>';
+  }
+  function tickCountdowns() {
+    var now = Date.now();
+    $$('.cd[data-end]').forEach(function (el) {
+      var left = Math.max(0, +el.getAttribute('data-end') - now), s = Math.floor(left / 1000);
+      var v = [Math.floor(s / 86400), Math.floor(s % 86400 / 3600), Math.floor(s % 3600 / 60), s % 60];
+      $$('b', el).forEach(function (b, i) { var t = pad2(v[i]); if (b.textContent !== t) b.textContent = t; });
+      if (!left && !el.classList.contains('over')) { el.classList.add('over'); el.setAttribute('aria-label', 'Oferta finalizada'); }
+    });
+  }
+  setInterval(tickCountdowns, 1000);
+  function cuposHtml(c) { return c.cupos ? '<p class="cc-cupos"><span class="pulse" aria-hidden="true"></span>Solo ' + c.cupos + ' combos disponibles a este precio</p>' : ''; }
+  function comboCard(ci) {
+    var c = ci.c;
+    return '<a class="combo-card reveal" href="combo.html?id=' + encodeURIComponent(c.id) + '">' +
+      '<span class="cc-ribbon">−' + c.descuento + '%</span>' +
+      '<div class="cc-photos n' + ci.items.length + '">' + ci.items.map(function (x, i) { return '<span class="ph photo"><img src="' + photo(colorImg(x.p, x.color), true) + '" alt="' + esc(x.p.name) + '" loading="lazy"></span>' + (i < ci.items.length - 1 ? '<i class="plus" aria-hidden="true">+</i>' : ''); }).join('') + '</div>' +
+      '<div class="cc-body"><div class="cc-flag"><span class="pulse" aria-hidden="true"></span>Oferta por tiempo limitado</div>' +
+      '<h3>' + esc(c.nombre) + '</h3>' + (c.lema ? '<p class="cc-lema">' + esc(c.lema) + '</p>' : '') +
+      '<p class="cc-items">' + ci.items.map(function (x) { return catShort(x.p); }).join(' + ') + '</p>' +
+      '<div class="cc-price"><s>' + money(ci.sum) + '</s><strong>' + money(ci.final) + '</strong></div>' +
+      '<div class="cc-save">Ahorras ' + money(ci.save) + '</div>' +
+      countdownHtml(ci.end) + cuposHtml(c) +
+      '<span class="btn btn-gold btn-block">Ver combo</span></div></a>';
+  }
+  function renderComboGrid(el, list) { el.innerHTML = list.map(comboCard).join(''); tickCountdowns(); }
+
+  function initCombo() {
+    var id = new URLSearchParams(location.search).get('id'), all = liveCombos();
+    var hero = $('#cb-hero'), moreSec = $('#cb-more'), moreGrid = $('#cb-more-grid');
+    var c = id && comboById(id), ci = c && comboInfo(c);
+    if (!ci) {
+      hero.innerHTML = '<div class="wrap cb-intro"><div class="eyebrow gold">' + esc(C.combosEtiqueta || 'Arma tu look') + '</div><h1>' + esc(C.combosTitulo || 'Combos que hacen juego') + '</h1><p>' + esc(C.combosTexto || '') + '</p>' +
+        (id ? '<p class="cb-ended">Esta oferta ya terminó, pero tenemos otras esperándote.</p>' : '') + '</div>';
+      $('#cb-more-title').textContent = all.length ? 'Elige tu combo' : 'Muy pronto, nuevos combos';
+      moreSec.hidden = false; renderComboGrid(moreGrid, all);
+      if (!all.length) moreGrid.innerHTML = '<p class="empty">Ahora no hay combos activos. Mira la <a class="link-line" href="tienda.html">tienda</a>.</p>';
+      return;
+    }
+    if (!ci.live) {
+      hero.innerHTML = '<div class="wrap cb-intro"><div class="eyebrow gold">Oferta finalizada</div><h1>' + esc(c.nombre) + '</h1><p class="cb-ended">Esta oferta ya terminó, pero tenemos otras esperándote.</p></div>';
+      moreSec.hidden = !all.length; renderComboGrid(moreGrid, all); return;
+    }
+    document.title = 'Combo ' + c.nombre + ' | Lovely Accesorios';
+    var colors = ci.items.map(function (x) { return x.color; }), qty = 1;
+    hero.innerHTML = '<div class="wrap cb-grid">' +
+      '<div class="cb-media"><span class="cc-ribbon big">−' + c.descuento + '%</span><div class="cb-stack n' + ci.items.length + '">' + ci.items.map(function (x, i) { return '<a class="ph photo" href="producto.html?id=' + x.p.id + '" data-i="' + i + '"><img src="' + photo(colorImg(x.p, x.color)) + '" alt="' + esc(x.p.name) + '"></a>'; }).join('') + '</div></div>' +
+      '<div class="cb-copy"><div class="cc-flag"><span class="pulse" aria-hidden="true"></span>Oferta por tiempo limitado</div>' +
+      '<div class="eyebrow gold">Combo · ' + ci.items.map(function (x) { return catShort(x.p); }).join(' + ') + '</div>' +
+      '<h1>' + esc(c.nombre) + '</h1>' + (c.lema ? '<p class="cb-lema">' + esc(c.lema) + '</p>' : '') +
+      '<div class="cb-price"><s>' + money(ci.sum) + '</s><strong>' + money(ci.final) + '</strong><span class="cc-save">Ahorras ' + money(ci.save) + '</span></div>' +
+      '<p class="cb-note">Precio por las ' + ci.items.length + ' piezas. Comprándolas por separado pagarías ' + money(ci.sum) + '.</p>' +
+      '<div class="cb-timer"><span>La oferta termina en</span>' + countdownHtml(ci.end) + '</div>' + cuposHtml(c) +
+      '<div class="qty-row"><span>Cantidad</span><div class="qty"><button type="button" id="cq-minus" aria-label="Quitar uno">−</button><output id="cq">1</output><button type="button" id="cq-plus" aria-label="Agregar uno">+</button></div></div>' +
+      '<div class="cb-ctas"><button class="btn btn-gold btn-block" id="cb-buy">Comprar combo</button><button class="btn btn-outline-light btn-block" id="cb-add">Agregar al carrito</button>' +
+      '<a class="cb-wa" id="cb-wa" href="#" target="_blank" rel="noopener">' + I.wa + 'Pedir este combo por WhatsApp</a></div></div></div>';
+    var inc = $('#cb-includes'); inc.hidden = false;
+    $('#cb-items').innerHTML = ci.items.map(function (x, i) {
+      return '<article class="cb-item reveal" data-i="' + i + '"><a class="ph photo" href="producto.html?id=' + x.p.id + '"><img src="' + photo(colorImg(x.p, x.color), true) + '" alt="' + esc(x.p.name) + '" loading="lazy"></a>' +
+        '<div class="cb-item-d"><small>' + esc(catOf(x.p.cat).name) + '</small><h3>' + esc(x.p.name) + '</h3><p class="cb-item-p"><s>' + money(x.p.price) + '</s></p>' +
+        '<p class="cb-color">Color: <b>' + esc(x.color) + '</b></p>' +
+        (x.p.colors.length > 1 ? '<div class="swatches">' + x.p.colors.map(function (k) { return '<button type="button" class="swatch" data-c="' + esc(k.name) + '" aria-label="' + esc(k.name) + '" aria-pressed="' + (k.name === x.color) + '" style="background:' + k.hex + '"></button>'; }).join('') + '</div>' : '') +
+        '<a class="link-line" href="producto.html?id=' + x.p.id + '">Ver detalles</a></div></article>';
+    }).join('');
+    function waMsg() {
+      return 'Hola Lovely, quiero el *Combo ' + c.nombre + '* (−' + c.descuento + '%) x' + qty + ':\n' + ci.items.map(function (x, i) { return '• ' + x.p.name + ' (' + colors[i] + ')'; }).join('\n') + '\nPrecio combo: ' + money(ci.final * qty);
+    }
+    function sync() { $('#cb-wa').href = waLink(waMsg()); }
+    $('#cb-items').addEventListener('click', function (e) {
+      var b = e.target.closest('.swatch'); if (!b) return;
+      var art = b.closest('.cb-item'), i = +art.getAttribute('data-i'), x = ci.items[i];
+      colors[i] = b.getAttribute('data-c');
+      $$('.swatch', art).forEach(function (s) { s.setAttribute('aria-pressed', s === b ? 'true' : 'false'); });
+      $('.cb-color b', art).textContent = colors[i];
+      $('img', art).src = photo(colorImg(x.p, colors[i]), true);
+      $('.cb-stack [data-i="' + i + '"] img').src = photo(colorImg(x.p, colors[i]));
+      sync();
+    });
+    $('#cq-minus').addEventListener('click', function () { qty = Math.max(1, qty - 1); $('#cq').textContent = qty; sync(); });
+    $('#cq-plus').addEventListener('click', function () { qty = Math.min(9, qty + 1); $('#cq').textContent = qty; sync(); });
+    function add() { Cart.addCombo(c.id, colors.slice(), qty); toast('Combo agregado: ahorras ' + money(ci.save * qty)); }
+    $('#cb-add').addEventListener('click', add);
+    $('#cb-buy').addEventListener('click', function () { add(); location.href = 'checkout.html'; });
+    sync(); tickCountdowns();
+    var others = all.filter(function (x) { return x.c.id !== c.id; });
+    moreSec.hidden = !others.length; renderComboGrid(moreGrid, others);
+  }
+  /* En la ficha de producto: invita a llevarlo en combo */
+  function productCombos(p) {
+    var list = liveCombos().filter(function (ci) { return ci.items.some(function (x) { return x.p.id === p.id; }); });
+    if (!list.length) return '';
+    var ci = list[0];
+    return '<a class="pd-combo" href="combo.html?id=' + encodeURIComponent(ci.c.id) + '"><span class="cc-ribbon">−' + ci.c.descuento + '%</span>' +
+      '<span class="pd-combo-ph">' + ci.items.map(function (x) { return '<img src="' + photo(colorImg(x.p, x.color), true) + '" alt="">'; }).join('') + '</span>' +
+      '<span class="pd-combo-t"><small>Combo · oferta limitada</small><b>Llévalo en el combo ' + esc(ci.c.nombre) + '</b><span>' + money(ci.final) + ' <s>' + money(ci.sum) + '</s></span></span></a>';
   }
 
   /* ---------- Efectos de scroll ---------- */
@@ -172,7 +360,7 @@
   /* Revelado: los elementos que entran juntos lo hacen en cascada */
   var revealIO = null;
   function reveal() {
-    $$('.section-head h2, .story h2, .promo h2, .page-hero h1, .prose h2, .pd-info h1, #shop-title').forEach(split);
+    $$('.section-head h2, .story h2, .promo h2, .page-hero h1, .prose h2, .pd-info h1, #shop-title, .cb-includes h2').forEach(split);
     var els = $$('.reveal:not(.in)');
     if (REDUCE || !('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in'); }); return; }
     revealIO = revealIO || new IntersectionObserver(function (en) {
@@ -283,6 +471,8 @@
     }
     tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.getAttribute('data-kind')); }); });
     if (grid) show('top');
+    var cg2 = $('#combo-grid'), lc = liveCombos();
+    if (cg2 && lc.length) { $('#combos-home').hidden = false; renderComboGrid(cg2, lc.slice(0, 3)); }
   }
 
   /* ---------- Tienda ---------- */
@@ -346,6 +536,7 @@
     $('#p-desc').textContent = p.desc; $('#p-badge').textContent = p.badge; $('#p-badge').hidden = !p.badge;
     if (!p.price) $('#p-price small').hidden = true;
     $('#p-stock').innerHTML = '<span class="dot"></span>' + (p.stock === 0 ? 'Agotado · avísame cuando llegue' : 'En stock' + (p.stock <= 5 ? ' · quedan ' + p.stock + ' unidades' : ''));
+    var ps = $('#p-specs'); if (ps) ps.textContent = 'Categoría: ' + c.name + ' · Colores: ' + p.colors.map(function (x) { return x.name; }).join(', ') + ' · Referencia: ' + p.id.toUpperCase();
     if (C.garantiaDias) $('#p-garantia').textContent = 'Garantía ' + C.garantiaDias + ' días';
     if (C.entregaDias || C.cambiosDias) $('#p-envios').textContent = (C.entregaDias ? 'Entrega en ' + C.entregaDias + ' días hábiles según ciudad. ' : '') + (C.cambiosDias ? 'Cambios dentro de ' + C.cambiosDias + ' días.' : '');
     var views = p.colors.map(function (x) { return { l: x.name, img: x.img }; }).concat(p.extra.map(function (x, i) { return { l: 'detalle ' + (i + 1), img: x }; }));
@@ -407,6 +598,8 @@
     $$('.js-add').forEach(function (b) { b.addEventListener('click', add); });
     $$('.js-buy').forEach(function (b) { b.addEventListener('click', function () { if (add()) location.href = 'checkout.html'; }); });
     $$('.js-wa').forEach(function (a) { a.href = waLink('Hola Lovely, quiero información sobre ' + p.name + '.'); a.target = '_blank'; a.rel = 'noopener'; });
+    var pc = productCombos(p), buy = $('.pd-info .js-buy');
+    if (pc && buy) buy.insertAdjacentHTML('afterend', pc);
     var rel = PRODUCTS.filter(function (x) { return x.id !== p.id && x.cat !== p.cat; }).slice(0, 3)
       .concat(PRODUCTS.filter(function (x) { return x.id !== p.id && x.cat === p.cat; }).slice(0, 1));
     $('#related').innerHTML = rel.map(card).join('');
@@ -422,18 +615,31 @@
     express: { label: 'Envío express', detalle: '1–2 días hábiles', costo: 18000 },
     contraentrega: { label: 'Contra entrega', detalle: 'pago al recibir', costo: 15000 }
   };
-  /* Envío estándar gratis si la promoción «envio-gratis» está activa y el subtotal llega al mínimo de su texto */
+  /* Envío estándar gratis: promoción activa de tipo «envio» con su mínimo de compra (panel → Promociones) */
   function freeShippingMin() {
-    var pr = (C.promociones || []).filter(function (x) { return x.id === 'envio-gratis' && x.activo; })[0];
-    var m = pr && String(pr.texto || '').match(/\$\s*([\d.]+)/);
-    return m ? +m[1].replace(/\./g, '') : 0;
+    var pr = (C.promociones || []).filter(function (x) { return x.tipo === 'envio' && x.activo; })[0];
+    return pr ? +pr.minimo || 0 : 0;
   }
-  function findProduct(id) { return PRODUCTS.filter(function (q) { return q.id === id; })[0]; }
-  function cartTotals(metodo) {
-    var it = Cart.items(), sub = it.reduce(function (a, x) { var p = findProduct(x.id); return a + (p ? p.price * x.qty : 0); }, 0);
+  /* Códigos de descuento (panel → Descuentos) */
+  function checkCode(code, sub) {
+    code = String(code || '').trim().toUpperCase(); if (!code) return null;
+    var c = (window.LV_CODES || []).filter(function (x) { return String(x.codigo).toUpperCase() === code; })[0];
+    if (!c || !c.activo) return { ok: false, msg: 'Ese código no existe o no está activo.' };
+    if (c.vence && new Date(c.vence + 'T23:59:59') < new Date()) return { ok: false, msg: 'Ese código ya venció.' };
+    if (c.minimo && sub < c.minimo) return { ok: false, msg: 'Este código aplica en compras desde ' + money(c.minimo) + '.' };
+    var d = c.tipo === 'valor' ? Math.min(+c.valor || 0, sub) : Math.round(sub * (+c.valor || 0) / 100);
+    return { ok: true, code: c.codigo, desc: d, label: c.tipo === 'valor' ? 'Código ' + c.codigo : 'Código ' + c.codigo + ' (−' + c.valor + '%)' };
+  }
+  function cartTotals(metodo, code) {
+    var it = Cart.items(), sub = 0, comboSave = 0;
+    it.forEach(function (x) {
+      if (x.combo) { var ci = comboInfo(comboById(x.combo), x.colors); if (ci) { var unit = ci.live ? ci.final : ci.sum; sub += unit * x.qty; comboSave += (ci.sum - unit) * x.qty; } }
+      else { var p = findProduct(x.id); if (p) sub += p.price * x.qty; }
+    });
+    var cd = checkCode(code, sub), disc = cd && cd.ok ? cd.desc : 0;
     var opt = SHIPPING[metodo], min = freeShippingMin();
-    var ship = opt ? (metodo === 'estandar' && min && sub > min ? 0 : opt.costo) : null;
-    return { items: it, sub: sub, ship: ship, total: sub + (ship || 0) };
+    var ship = opt ? (metodo === 'estandar' && min && sub - disc > min ? 0 : opt.costo) : null;
+    return { items: it, sub: sub, comboSave: comboSave, code: cd, disc: disc, ship: ship, total: sub - disc + (ship || 0) };
   }
 
   function initCheckout() {
@@ -452,14 +658,25 @@
       var note = $('#ship-free'); if (note) { note.hidden = !min; note.textContent = min ? (t.sub > min ? 'Tu pedido tiene envío estándar gratis.' : 'Envío estándar gratis en pedidos superiores a ' + money(min) + '.') : ''; }
     }
 
+    var codeVal = ''; try { codeVal = sessionStorage.getItem('lv_code') || ''; } catch (e) {}
     function renderSummary() {
-      var t = cartTotals(step >= 2 ? envioSel() : ''), box = $('#lines');
+      var t = cartTotals(step >= 2 ? envioSel() : '', codeVal), box = $('#lines');
       box.innerHTML = t.items.length ? t.items.map(function (x, i) {
+        if (x.combo) {
+          var ci = comboInfo(comboById(x.combo), x.colors); if (!ci) return '';
+          return '<div class="line-item combo-line"><div class="th"><img src="' + photo(colorImg(ci.items[0].p, ci.items[0].color), true) + '" alt=""><span class="th-tag">−' + ci.c.descuento + '%</span></div><div class="d"><strong>Combo ' + esc(ci.c.nombre) + '</strong><small>' +
+            ci.items.map(function (y) { return esc(y.p.name) + ' · ' + esc(y.color); }).join('<br>') + ' · Cant. ' + x.qty + '</small>' +
+            (step < 3 ? '<button class="rm" data-i="' + i + '">Quitar</button>' : '') + '</div><strong>' + money((ci.live ? ci.final : ci.sum) * x.qty) + '</strong></div>';
+        }
         var p = findProduct(x.id); if (!p) return '';
         return '<div class="line-item"><div class="th"><img src="' + photo(colorImg(p, x.color), true) + '" alt=""></div><div class="d"><strong>' + esc(p.name) + '</strong><small>' + esc(x.color) + ' · Cant. ' + x.qty + '</small>' +
           (step < 3 ? '<button class="rm" data-i="' + i + '">Quitar</button>' : '') + '</div><strong>' + money(p.price * x.qty) + '</strong></div>';
       }).join('') : '<p class="note">Tu carrito está vacío. <a class="link-line" href="tienda.html">Ir a la tienda</a></p>';
       $('#t-sub').textContent = t.items.length ? money(t.sub) : '—';
+      $('#row-combo').hidden = !t.comboSave; $('#t-combo').textContent = '−' + money(t.comboSave);
+      $('#row-code').hidden = !t.disc; $('#t-code').textContent = '−' + money(t.disc); if (t.code && t.code.ok) $('#t-code-label').textContent = t.code.label;
+      var cm = $('#code-msg');
+      if (codeVal && t.items.length) { cm.hidden = false; cm.textContent = t.code.ok ? 'Código aplicado: ahorras ' + money(t.disc) + '.' : t.code.msg; cm.classList.toggle('ok', !!t.code.ok); } else cm.hidden = true;
       $('#t-ship').textContent = step < 2 ? 'Se calcula en el paso 2' : t.ship === null ? 'Elige un envío' : t.ship === 0 ? 'Gratis' : money(t.ship);
       $('#t-total').textContent = t.items.length ? money(t.total) : '—';
       $('#confirm-order').disabled = !t.items.length;
@@ -476,6 +693,12 @@
 
     $('#lines').addEventListener('click', function (e) { var b = e.target.closest('.rm'); if (b) { Cart.remove(+b.getAttribute('data-i')); renderSummary(); } });
     $$('input[name="envio"]').forEach(function (r) { r.addEventListener('change', renderSummary); });
+    $('#code').value = codeVal;
+    $('#code-form').addEventListener('submit', function (e) {
+      e.preventDefault(); codeVal = $('#code').value.trim().toUpperCase(); $('#code').value = codeVal;
+      try { codeVal ? sessionStorage.setItem('lv_code', codeVal) : sessionStorage.removeItem('lv_code'); } catch (x) {}
+      renderSummary();
+    });
 
     /* Paso 1: datos */
     $('#form-datos').addEventListener('submit', function (e) {
@@ -495,13 +718,15 @@
 
     /* Paso 2 → 3: abre WhatsApp y deja el pedido pendiente (no se registra todavía) */
     function buildOrder() {
-      var metodo = envioSel(), t = cartTotals(metodo), prev = readPending();
+      var metodo = envioSel(), t = cartTotals(metodo, codeVal), prev = readPending();
       var sig = JSON.stringify([t.items, metodo, cliente]);
       return {
         numero: prev && prev.sig === sig ? prev.numero : 'LV-' + String(Date.now()).slice(-6), sig: sig,
         fecha: new Date().toISOString(), estado: 'pendiente_confirmacion', cliente: cliente,
         envio: { metodo: metodo, costo: t.ship },
-        pago: { subtotal: t.sub, envio: t.ship, total: t.total, items: t.items.map(function (x) { var p = findProduct(x.id); return { id: p.id, nombre: p.name, color: x.color, cantidad: x.qty, precioUnitario: p.price, subtotal: p.price * x.qty }; }) }
+        pago: { subtotal: t.sub, descuento: t.disc, codigo: t.code && t.code.ok ? t.code.code : '', envio: t.ship, total: t.total, items: t.items.map(function (x) {
+          if (x.combo) { var ci = comboInfo(comboById(x.combo), x.colors), unit = ci.live ? ci.final : ci.sum; return { combo: ci.c.id, nombre: 'Combo ' + ci.c.nombre, color: ci.items.map(function (y) { return y.p.name + ' (' + y.color + ')'; }).join(' + '), cantidad: x.qty, precioUnitario: unit, subtotal: unit * x.qty }; }
+          var p = findProduct(x.id); return { id: p.id, nombre: p.name, color: x.color, cantidad: x.qty, precioUnitario: p.price, subtotal: p.price * x.qty }; }) }
       };
     }
     function waOrderUrl(o) {
@@ -512,7 +737,7 @@
         '*Envío a:* ' + o.cliente.direccion + ', ' + o.cliente.ciudad + ', ' + o.cliente.departamento + '\n' +
         '*Método:* ' + opt.label + ' (' + opt.detalle + ')\n\n*Detalle:*\n' +
         o.pago.items.map(function (i) { return '• ' + i.nombre + ' (' + i.color + ') x' + i.cantidad + ' = ' + money(i.subtotal); }).join('\n') + '\n\n' +
-        '*Subtotal:* ' + money(o.pago.subtotal) + '\n*Envío:* ' + (o.pago.envio ? money(o.pago.envio) : 'Gratis') + '\n*TOTAL:* ' + money(o.pago.total) + '\n\n' +
+        '*Subtotal:* ' + money(o.pago.subtotal) + '\n' + (o.pago.descuento ? '*Descuento (' + o.pago.codigo + '):* −' + money(o.pago.descuento) + '\n' : '') + '*Envío:* ' + (o.pago.envio ? money(o.pago.envio) : 'Gratis') + '\n*TOTAL:* ' + money(o.pago.total) + '\n\n' +
         (o.cliente.marketingOptin ? 'Acepta recibir promociones.' : 'No desea recibir promociones.');
       return 'https://wa.me/' + C.whatsapp + '?text=' + encodeURIComponent(msg);
     }
@@ -581,6 +806,7 @@
     });
   }
 
+  applyTexts();
   renderChrome();
   watchSvgs(); setTimeout(watchSvgs, 1500);
   setTimeout(parallax, 0);
@@ -589,5 +815,6 @@
   if (page === 'producto') initProduct();
   if (page === 'checkout') initCheckout();
   if (page === 'ayuda') initHelp();
+  if (page === 'combo') initCombo();
   reveal();
 })();

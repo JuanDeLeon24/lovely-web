@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css?v=20261026c">
+<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css?v=20261026d">
 </head>
 <body data-page="home">
 <div id="site-header"></div>
@@ -27,11 +27,11 @@
     <a class="hero-tag" href="producto.html?id=reloj-naviforce-7105"><span>Reloj Naviforce 7105</span><b>Ver producto →</b></a>
   </div>
   <div class="hero-copy">
-    <div class="eyebrow gold">Nueva colección 2026</div>
-    <h1>Pequeños detalles,<br><span>grandes estilos.</span></h1>
-    <p>Relojes, gorras y gafas seleccionados para quienes se expresan a través de los detalles.</p>
+    <div class="eyebrow gold" data-cfg="heroEtiqueta">Nueva colección 2026</div>
+    <h1><span data-cfg="heroTitulo" class="h-plain">Pequeños detalles,</span><br><span data-cfg="heroTituloDorado">grandes estilos.</span></h1>
+    <p data-cfg="heroSubtitulo">Relojes, gorras y gafas seleccionados para quienes se expresan a través de los detalles.</p>
     <div class="hero-ctas">
-      <a class="btn btn-gold" href="tienda.html">Comprar ahora</a>
+      <a class="btn btn-gold" href="tienda.html" data-cfg="heroBotonTexto">Comprar ahora</a>
       <a class="btn btn-outline-light" href="tienda.html?filtro=nuevos">Ver novedades</a>
     </div>
   </div>
@@ -71,22 +71,20 @@
   <div class="grid-products" id="featured"></div>
 </section>
 
-<section class="section wrap">
-  <div class="promo reveal">
-    <div class="promo-copy">
-      <div class="eyebrow gold">Arma tu look</div>
-      <h2>Gorra + gafas.<br>Un estilo completo.</h2>
-      <p>Lleva dos accesorios del mismo look y recibe [BENEFICIO DE LA PROMOCIÓN]. Válido hasta [FECHA].</p>
-      <div><a class="btn btn-gold" href="tienda.html">Descubrir combinaciones</a></div>
+<section class="combos-sec" id="combos-home" hidden>
+  <div class="wrap">
+    <div class="section-head">
+      <div><div class="eyebrow gold" data-cfg="combosEtiqueta">Arma tu look</div><h2 data-cfg="combosTitulo">Combos que hacen juego</h2><p class="combos-lead" data-cfg="combosTexto">Lleva el look completo y ahorra 12%. Ofertas por tiempo limitado.</p></div>
+      <a class="link-line link-light" href="combo.html">Ver todos los combos</a>
     </div>
-    <div class="promo-media duo"><img src="assets/products/gorra-diesel-premium-1-sm.webp" alt="Gorra Diesel Premium beige" loading="lazy"><img src="assets/products/gafas-club-classic-2-sm.webp" alt="Gafas Club Classic negro y dorado" loading="lazy"></div>
+    <div class="combo-grid" id="combo-grid"></div>
   </div>
 </section>
 
 <section class="story reveal">
   <img src="assets/img/isotipo-negro.svg" alt="">
-  <h2>Lovely: encantador, hermoso y especial.</h2>
-  <p>Seleccionamos cada accesorio pensando en personas que quieren destacar sin decir una palabra. Diseño, originalidad y confianza en cada detalle.</p>
+  <h2 data-cfg="historiaTitulo">Lovely: encantador, hermoso y especial.</h2>
+  <p data-cfg="historiaTexto">Seleccionamos cada accesorio pensando en personas que quieren destacar sin decir una palabra. Diseño, originalidad y confianza en cada detalle.</p>
   <a class="link-line" href="nosotros.html">Conoce nuestra historia</a>
 </section>
 
@@ -107,7 +105,7 @@
 </main>
 
 <div id="site-footer"></div>
-<script src="js/data.js?v=20261026c"></script>
-<script src="js/main.js?v=20261026c"></script>
+<script src="js/data.js?v=20261026d"></script>
+<script src="js/main.js?v=20261026d"></script>
 </body>
 </html>

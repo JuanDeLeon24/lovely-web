@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/admin.css?v=20261026c">
+<link rel="stylesheet" href="css/admin.css?v=20261026d">
 </head>
 <body>
 
@@ -56,20 +56,41 @@
     <button id="logout" class="btn btn-ghost">Salir</button>
   </header>
   <nav class="tabs" role="tablist">
-    <button role="tab" data-tab="productos" aria-selected="true">Productos</button>
+    <button role="tab" data-tab="inicio" aria-selected="true">Inicio</button>
+    <button role="tab" data-tab="productos" aria-selected="false">Productos</button>
+    <button role="tab" data-tab="combos" aria-selected="false">Combos</button>
+    <button role="tab" data-tab="descuentos" aria-selected="false">Códigos de descuento</button>
+    <button role="tab" data-tab="promociones" aria-selected="false">Promociones</button>
+    <button role="tab" data-tab="marketing" aria-selected="false">Marketing</button>
+    <button role="tab" data-tab="pedidos" aria-selected="false">Pedidos</button>
+    <button role="tab" data-tab="paginas" aria-selected="false">Textos de la página</button>
+    <button role="tab" data-tab="faqs" aria-selected="false">Preguntas frecuentes</button>
     <button role="tab" data-tab="categorias" aria-selected="false">Categorías</button>
-    <button role="tab" data-tab="faqs" aria-selected="false">❓ FAQs</button>
-    <button role="tab" data-tab="descuentos" aria-selected="false">🏷️ Descuentos</button>
-    <button role="tab" data-tab="paginas" aria-selected="false">📄 Páginas</button>
-    <button role="tab" data-tab="promociones" aria-selected="false">🎯 Promociones</button>
-    <button role="tab" data-tab="pedidos" aria-selected="false">📦 Pedidos</button>
-    <button role="tab" data-tab="marketing" aria-selected="false">📧 Marketing</button>
-    <button role="tab" data-tab="ventas" aria-selected="false">⚙️ Configuración</button>
+    <button role="tab" data-tab="ventas" aria-selected="false">Configuración</button>
     <button role="tab" data-tab="respaldo" aria-selected="false">Respaldo</button>
   </nav>
 
   <main class="wrap">
-    <section data-panel="productos">
+    <section data-panel="inicio">
+      <div class="hello">
+        <h1>Hola 👋 Este es el panel de tu tienda</h1>
+        <p>Desde aquí cambias todo lo que ven tus clientes. Funciona siempre igual:</p>
+        <ol class="steps-how">
+          <li><b>Elige una pestaña</b> (arriba) y edita lo que necesites.</li>
+          <li><b>Pulsa «Guardar»</b> en cada ventana. Arriba aparecerá «Cambios sin publicar».</li>
+          <li><b>Pulsa «Publicar cambios»</b> (botón dorado). La tienda se actualiza en 1 o 2 minutos.</li>
+        </ol>
+        <p class="muted small">Puedes hacer muchos cambios y publicarlos todos juntos. Si cierras el panel sin publicar, se pierden. Pedidos y Marketing se guardan solos en este dispositivo y no necesitan publicarse.</p>
+      </div>
+      <div id="dash" class="dash"></div>
+    </section>
+
+    <section data-panel="productos" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> crear, editar o borrar productos: nombre, precio, unidades, descripción, colores y fotos.</p>
+        <ol><li>Toca un producto para editarlo o pulsa <b>«+ Nuevo producto»</b>.</li><li>Cada color necesita su foto (se optimiza sola).</li><li>Pon <b>0 unidades</b> para marcarlo como agotado; los combos que lo incluyen se ocultan solos.</li><li>Pulsa <b>Guardar</b> y luego <b>Publicar cambios</b>.</li></ol>
+      </details>
       <div class="toolbar">
         <input id="q" type="search" placeholder="Buscar producto…" aria-label="Buscar producto">
         <select id="fcat" aria-label="Filtrar por categoría"></select>
@@ -79,111 +100,169 @@
       <div id="list" class="plist"></div>
     </section>
 
+    <section data-panel="combos" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> los combos «Arma tu look» juntan productos que hacen juego (por ejemplo gorra + gafas + reloj) con un descuento. Se muestran en el inicio, en la página <a href="combo.html" target="_blank">Combos</a> y en la ficha de cada producto incluido, con cuenta regresiva y el aviso de oferta limitada.</p>
+        <ol><li>Pulsa <b>«+ Nuevo combo»</b> o toca <b>Editar</b> en uno existente.</li><li>Elige 2 a 4 productos y su color. El precio con descuento se calcula solo.</li><li>Pon la <b>fecha en que termina</b> la oferta: al llegar ese día el combo desaparece solo.</li><li>Para pausarlo sin borrarlo, desmarca <b>«Visible en la tienda»</b>.</li><li>Pulsa <b>Guardar</b> y luego <b>Publicar cambios</b>.</li></ol>
+        <p class="muted small">El cliente puede cambiar el color de cada pieza. En el carrito y en el mensaje de WhatsApp el combo aparece con su precio rebajado. Los títulos de la sección se editan en «Textos de la página».</p>
+      </details>
+      <div class="toolbar"><button id="new-combo" class="btn btn-dark">+ Nuevo combo</button></div>
+      <div id="combos-list" class="clist"></div>
+    </section>
+
+    <section data-panel="descuentos" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> crear códigos (por ejemplo <b>LOVELY10</b>) que tus clientes escriben al pagar, en el cuadro «Código de descuento» del carrito, para recibir un descuento.</p>
+        <ol><li>Pulsa <b>«+ Nuevo código»</b>, escribe el código y elige si descuenta un <b>porcentaje</b> o un <b>valor fijo</b>.</li><li>Opcional: compra mínima y fecha de vencimiento.</li><li>Publica y compártelo en Instagram, WhatsApp o en una ventana emergente (pestaña Promociones).</li></ol>
+        <p class="muted small">El descuento del código se suma al de los combos y aparece en el mensaje del pedido. Desmarca «Activo» para que deje de funcionar.</p>
+      </details>
+      <div class="toolbar"><button id="new-code" class="btn btn-dark">+ Nuevo código</button></div>
+      <div id="codes-list" class="clist"></div>
+    </section>
+
+    <section data-panel="promociones" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> anunciar ofertas en la tienda. Hay tres tipos:</p>
+        <ul>
+          <li><b>Barra superior:</b> un mensaje en la franja negra de arriba de todas las páginas (se alterna con el anuncio normal).</li>
+          <li><b>Ventana emergente:</b> aparece a los pocos segundos, una sola vez por visitante. Puede mostrar un código de descuento que el cliente copia con un toque y se aplica solo al pagar.</li>
+          <li><b>Envío gratis:</b> el envío estándar sale gratis cuando la compra supera el monto que elijas. Se anuncia en la barra y se aplica solo en el carrito.</li>
+        </ul>
+        <p class="muted small">Activa o pausa cada una con su casilla. Si pones fecha de fin, se apaga sola ese día. Pulsa Guardar y luego Publicar cambios.</p>
+      </details>
+      <div class="toolbar"><button id="new-promo" class="btn btn-dark">+ Nueva promoción</button></div>
+      <div id="promos-list" class="clist"></div>
+    </section>
+
+    <section data-panel="marketing" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> enviar, cuando tú quieras, mensajes sobre lo nuevo (combos, productos, códigos) a los clientes que <b>aceptaron recibir novedades</b>, por WhatsApp y por correo.</p>
+        <ol>
+          <li><b>Reúne tus clientes:</b> cuando te llegue por WhatsApp un pedido que diga «Acepta recibir promociones» o una «SUSCRIPCIÓN A NOVEDADES» (desde el pie de la tienda), copia el mensaje y pégalo abajo. También puedes agregar a alguien a mano o importar una lista (CSV).</li>
+          <li><b>Escribe el mensaje:</b> elige una plantilla o escribe el tuyo. <code>{nombre}</code> se cambia por el nombre de cada cliente.</li>
+          <li><b>Envía:</b> por WhatsApp se abre un chat por cliente con el mensaje listo; tú solo pulsas «Enviar». Por correo se abre tu correo con los destinatarios en copia oculta, por grupos de 40.</li>
+        </ol>
+        <p class="muted small">🔒 Por la ley de protección de datos (Ley 1581 de 2012) la lista de clientes se guarda <b>solo en este navegador</b>, nunca en la página pública. Descarga una copia en «Respaldo» de vez en cuando. A quien responda BAJA, márcalo con «Dar de baja».</p>
+      </details>
+
+      <div class="mk-grid">
+        <div class="box">
+          <h2>1. Clientes que aceptaron recibir novedades</h2>
+          <p id="mk-count" class="muted"></p>
+          <label>Pega un mensaje de WhatsApp (pedido o suscripción)<textarea id="mk-paste" rows="4" placeholder="*PEDIDO LV-123456* … o *SUSCRIPCIÓN A NOVEDADES* …"></textarea></label>
+          <div class="row wrap-row">
+            <button id="mk-paste-btn" class="btn btn-dark btn-sm">Agregar desde el mensaje</button>
+            <button id="mk-add" class="btn btn-outline btn-sm">+ Agregar a mano</button>
+            <label class="btn btn-outline btn-sm file">Importar CSV<input id="mk-import" type="file" accept=".csv,text/csv,text/plain" hidden></label>
+            <button id="mk-export" class="btn btn-ghost-dark btn-sm">Exportar CSV</button>
+          </div>
+          <input id="mk-q" type="search" placeholder="Buscar cliente…" aria-label="Buscar cliente">
+          <div id="mk-list" class="mk-list"></div>
+        </div>
+        <div class="box">
+          <h2>2. Escribe el mensaje</h2>
+          <p class="muted small">Plantillas con tus ofertas actuales (puedes editarlas):</p>
+          <div class="row wrap-row" id="mk-tpl"></div>
+          <label>Asunto (solo para correo)<input id="mk-subject" placeholder="Ej.: Nuevo combo con 12% de descuento"></label>
+          <label>Mensaje<textarea id="mk-msg" rows="7" placeholder="¡Hola {nombre}! …"></textarea><small>Al final se agrega solo: «Responde BAJA si no deseas recibir más mensajes.»</small></label>
+          <h2>3. Envía</h2>
+          <div class="row wrap-row">
+            <button id="mk-send-wa" class="btn btn-gold">Enviar por WhatsApp</button>
+            <button id="mk-send-mail" class="btn btn-dark">Enviar por correo</button>
+          </div>
+          <div id="mk-run" class="mk-run" hidden></div>
+          <h3>Envíos anteriores</h3>
+          <div id="mk-hist" class="muted small"></div>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="pedidos" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> llevar el control de los pedidos que te llegan por WhatsApp: estado (por confirmar, pagado, enviado, entregado) y avisos al cliente.</p>
+        <ol><li>Cuando llegue un pedido a tu WhatsApp, mantén pulsado el mensaje, cópialo y pégalo abajo. Pulsa <b>«Registrar pedido»</b>.</li><li>Cambia el estado a medida que avanza. Con <b>«Avisar al cliente»</b> se abre su chat con un mensaje listo según el estado.</li><li>Si el cliente aceptó recibir promociones, queda agregado solo a Marketing.</li></ol>
+        <p class="muted small">🔒 Los pedidos se guardan solo en este navegador (no se publican). Descarga una copia en «Respaldo» o exporta a Excel (CSV).</p>
+      </details>
+      <div class="box">
+        <label>Pega aquí el mensaje del pedido<textarea id="ord-paste" rows="4" placeholder="*PEDIDO LV-123456* …"></textarea></label>
+        <button id="ord-add" class="btn btn-dark btn-sm">Registrar pedido</button>
+      </div>
+      <div class="toolbar">
+        <input id="ord-q" type="search" placeholder="Buscar por número, cliente o celular…" aria-label="Buscar pedido">
+        <select id="ord-f" aria-label="Filtrar por estado"></select>
+        <button id="ord-export" class="btn btn-outline">Exportar CSV</button>
+      </div>
+      <p id="ord-count" class="muted"></p>
+      <div id="ord-list" class="olist"></div>
+    </section>
+
+    <section data-panel="paginas" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> cambiar los textos fijos de la tienda (títulos, frases, misión, horario…). Cada grupo dice <b>en qué parte</b> aparece y tiene un enlace para verla.</p>
+        <ol><li>Escribe el texto nuevo en el campo. Lo que ves en gris es el texto actual por defecto.</li><li>Si dejas un campo vacío, se usa el texto por defecto.</li><li>Pulsa <b>Publicar cambios</b> para verlo en la tienda.</li></ol>
+      </details>
+      <div id="texts" class="texts"></div>
+    </section>
+
+    <section data-panel="faqs" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> editar las preguntas frecuentes de la página <a href="ayuda.html" target="_blank">Ayuda</a>, agrupadas en Pagos, Envíos, Garantías y Cambios.</p>
+        <ol><li>Toca una pregunta para editarla o pulsa <b>«+ Nueva pregunta»</b>.</li><li>Usa las flechas ↑ ↓ para cambiar el orden. La primera de cada grupo se muestra abierta.</li><li>Para poner algo en <b>negrita</b>, escríbelo entre dos asteriscos: <code>**30 días**</code>.</li></ol>
+      </details>
+      <div class="toolbar"><button id="new-faq" class="btn btn-dark">+ Nueva pregunta</button></div>
+      <div id="faqs-list"></div>
+    </section>
+
     <section data-panel="categorias" hidden>
-      <p class="muted">Nombre, ícono y foto de portada de cada categoría del menú y del inicio.</p>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> nombre, ícono y foto de portada de cada categoría (menú, inicio y tienda). Una categoría solo se puede eliminar si no tiene productos.</p>
+      </details>
       <div id="cats" class="cards"></div>
       <button id="new-cat" class="btn btn-outline">+ Nueva categoría</button>
     </section>
 
-    <section data-panel="faqs" hidden>
-      <div class="toolbar">
-        <select id="f-faq-cat" aria-label="Filtrar por categoría">
-          <option value="">Todas las categorías</option>
-          <option value="pagos">Pagos</option>
-          <option value="envios">Envíos</option>
-          <option value="garantias">Garantías</option>
-          <option value="cambios">Cambios</option>
-        </select>
-        <button id="new-faq" class="btn btn-dark">+ Nueva FAQ</button>
-      </div>
-      <p id="count-faqs" class="muted"></p>
-      <div id="list-faqs" class="plist"></div>
-    </section>
-
-    <section data-panel="descuentos" hidden>
-      <div class="toolbar">
-        <input id="q-desc" type="search" placeholder="Buscar descuento (código, descripción)..." aria-label="Buscar descuento">
-        <select id="f-desc-activo" aria-label="Filtrar por estado">
-          <option value="">Todos</option>
-          <option value="true">Activos</option>
-          <option value="false">Inactivos</option>
-        </select>
-        <button id="new-desc" class="btn btn-dark">+ Nuevo descuento</button>
-      </div>
-      <p id="count-desc" class="muted"></p>
-      <div id="list-desc" class="plist"></div>
-    </section>
-
-    <section data-panel="paginas" hidden>
-      <div class="toolbar">
-        <select id="page-select" aria-label="Seleccionar página">
-          <option value="index">Inicio (index)</option>
-          <option value="nosotros">Nosotros</option>
-          <option value="contacto">Contacto</option>
-        </select>
-      </div>
-      <div id="page-editor" class="form-grid"></div>
-    </section>
-
-    <section data-panel="promociones" hidden>
-      <div class="toolbar">
-        <button id="new-promo" class="btn btn-dark">+ Nueva promoción</button>
-      </div>
-      <p id="count-promos" class="muted"></p>
-      <div id="list-promos" class="plist"></div>
-    </section>
-
-    <section data-panel="pedidos" hidden>
-      <div class="toolbar">
-        <input id="q-pedidos" type="search" placeholder="Buscar pedido (número, cliente, email)..." aria-label="Buscar pedido">
-        <select id="f-estado" aria-label="Filtrar por estado">
-          <option value="">Todos los estados</option>
-          <option value="pagado">Pagado</option>
-          <option value="pendiente_pago">Pendiente de pago</option>
-          <option value="enviado">Enviado</option>
-          <option value="entregado">Entregado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-        <button id="export-pedidos" class="btn btn-outline">Exportar CSV</button>
-      </div>
-      <p id="count-pedidos" class="muted"></p>
-      <div id="list-pedidos" class="plist"></div>
-    </section>
-
-    <section data-panel="marketing" hidden>
-      <div class="toolbar">
-        <input id="q-marketing" type="search" placeholder="Buscar contacto (nombre, email, celular)..." aria-label="Buscar contacto">
-        <button id="export-marketing" class="btn btn-outline">Exportar CSV</button>
-        <button id="sync-marketing" class="btn btn-dark">Sincronizar con localStorage</button>
-      </div>
-      <p id="count-marketing" class="muted"></p>
-      <div id="list-marketing" class="plist"></div>
-    </section>
-
     <section data-panel="ventas" hidden>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> datos de contacto y políticas que usa toda la tienda. El número de WhatsApp es al que llegan los pedidos: escríbelo con el 57 adelante, sin + ni espacios.</p>
+      </details>
       <form id="cfg" class="form-grid">
         <h2>Contacto</h2>
-        <label>WhatsApp (con indicativo, sin + ni espacios)<input name="whatsapp" inputmode="numeric" placeholder="573001234567"></label>
+        <label>WhatsApp de la tienda<input name="whatsapp" inputmode="numeric" placeholder="573001234567"><small>Con 57 adelante, sin + ni espacios. Aquí llegan los pedidos.</small></label>
+        <label>Correo de la tienda<input name="email" type="email"><small>Se muestra en Ayuda y lo usas para enviar correos de Marketing.</small></label>
         <label>Instagram (enlace)<input name="instagram" type="url"></label>
         <label>TikTok (enlace)<input name="tiktok" type="url"></label>
         <label>Facebook (enlace)<input name="facebook" type="url"></label>
-        <h2>Barra de anuncio</h2>
-        <label>Texto destacado<input name="anuncioTitulo" placeholder="ENVÍOS A TODA COLOMBIA"></label>
-        <label>Texto complementario<input name="anuncioTexto" placeholder="Paga con PSE, Nequi o tarjeta"></label>
+        <label>Dirección de la tienda en internet<input name="sitioWeb" type="url" placeholder="https://…"><small>Se usa en los enlaces de los mensajes de Marketing. Vacío = la dirección actual.</small></label>
         <h2>Envíos, cambios y garantía</h2>
-        <label>Días hábiles de entrega<input name="entregaDias" placeholder="Ej.: 2 a 5"></label>
-        <label>Días para cambios<input name="cambiosDias" inputmode="numeric" placeholder="Ej.: 15"></label>
-        <label>Días de garantía<input name="garantiaDias" inputmode="numeric" placeholder="Ej.: 90"></label>
+        <label>Días hábiles de entrega<input name="entregaDias" placeholder="Ej.: 3-5"><small>Se muestra en la ficha de cada producto.</small></label>
+        <label>Días para cambios<input name="cambiosDias" inputmode="numeric" placeholder="Ej.: 30"></label>
+        <label>Días de garantía<input name="garantiaDias" inputmode="numeric" placeholder="Ej.: 365"></label>
       </form>
     </section>
 
     <section data-panel="respaldo" hidden>
-      <h2>Respaldo del catálogo</h2>
-      <p class="muted">Descarga una copia de todos los datos (productos, precios, categorías y contacto) para guardarla.</p>
-      <button id="backup" class="btn btn-outline">Descargar copia (JSON)</button>
-      <h2>Restaurar</h2>
-      <p class="muted">Carga una copia descargada antes. Reemplaza los datos actuales; luego revisa y pulsa «Publicar cambios».</p>
-      <label class="btn btn-outline file">Cargar copia…<input id="restore" type="file" accept="application/json" hidden></label>
+      <details class="guide" open>
+        <summary>¿Qué hago aquí?</summary>
+        <p><b>Para qué sirve:</b> guardar una copia de seguridad en tu computador o celular, y recuperarla si algo sale mal.</p>
+      </details>
+      <h2>Tienda (productos, combos, códigos, promociones, textos y preguntas)</h2>
+      <p class="muted">Descarga una copia de todo lo que se publica en la tienda.</p>
+      <button id="backup" class="btn btn-outline">Descargar copia de la tienda</button>
+      <p class="muted" style="margin-top:12px">Restaurar: reemplaza los datos actuales por una copia descargada antes. Luego revisa y pulsa «Publicar cambios».</p>
+      <label class="btn btn-outline file">Cargar copia de la tienda…<input id="restore" type="file" accept="application/json" hidden></label>
+      <h2>Clientes y pedidos (solo de este dispositivo)</h2>
+      <p class="muted">Guárdala de vez en cuando: si borras los datos del navegador o cambias de equipo, con esta copia los recuperas.</p>
+      <button id="backup-local" class="btn btn-outline">Descargar clientes y pedidos</button>
+      <label class="btn btn-outline file">Cargar clientes y pedidos…<input id="restore-local" type="file" accept="application/json" hidden></label>
     </section>
   </main>
 </div>
@@ -225,9 +304,26 @@
     </footer>
   </form>
 </dialog>
+<!-- Editor general (combos, códigos, promociones, preguntas, contactos) -->
+<dialog id="dlg" class="editor" aria-labelledby="dlg-title">
+  <form id="dlg-form" method="dialog" novalidate>
+    <header class="ed-head">
+      <h2 id="dlg-title">Editar</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
+    </header>
+    <div class="ed-body" id="dlg-body"></div>
+    <p id="dlg-error" class="error dlg-error" role="alert" hidden></p>
+    <footer class="ed-foot">
+      <button type="button" id="dlg-delete" class="btn btn-danger">Eliminar</button>
+      <span class="grow"></span>
+      <button type="button" class="btn btn-ghost-dark" data-close>Cancelar</button>
+      <button type="submit" class="btn btn-dark">Guardar</button>
+    </footer>
+  </form>
+</dialog>
 <datalist id="badges"><option>Nuevo</option><option>Más vendido</option><option>Top</option><option>Ideal para regalo</option><option>Edición limitada</option><option>Oferta</option></datalist>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="js/admin.js?v=20261026c"></script>
+<script src="js/admin.js?v=20261026d"></script>
 </body>
 </html>

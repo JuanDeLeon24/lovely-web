@@ -126,35 +126,107 @@ label.check input{width:20px;height:20px;min-height:0;accent-color:var(--negro)}
 /* Aviso */
 .toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);background:var(--negro);color:#fff;padding:12px 18px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:100;max-width:calc(100% - 32px)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-/* Estilos para Pedidos y Marketing */
-.pcol{flex:1;min-width:0}
-.p-num{flex:0 0 110px;font-family:var(--f-titulo);font-weight:700;font-size:13px}
-.p-fecha{flex:0 0 150px;font-size:12px;color:var(--texto-2);white-space:nowrap}
-.p-cliente{flex:1;min-width:140px;font-size:13px}
-.p-cliente small{display:block;color:var(--texto-2);font-size:11px}
-.p-items{flex:2;min-width:180px;font-size:12px;color:var(--grafito);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.p-total{flex:0 0 110px;font-family:var(--f-titulo);font-weight:700;font-size:13px;text-align:right}
-.p-estado{flex:0 0 130px}
-.p-acciones{flex:0 0 200px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.btn-sm{min-height:36px;padding:0 12px;font-size:11px}
+.row{display:flex;gap:8px;align-items:center}
+.wrap-row{flex-wrap:wrap}
+code{background:var(--gris-claro);padding:1px 5px;border-radius:2px;font-size:12px}
 
-.estado{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;font-size:11px;font-weight:600;border-radius:2px;white-space:nowrap}
-.estado-pagado{background:#E8F5E9;color:#2E7D32}
-.estado-pendiente_pago{background:#FFF8E1;color:#F57F17}
-.estado-enviado{background:#E3F2FD;color:#1565C0}
-.estado-entregado{background:#E8F5E9;color:#2E7D32}
-.estado-cancelado{background:#FCE4EC;color:#C62828}
+/* Guías dentro de cada sección */
+.guide{background:#fff;border:1px solid var(--divisor);border-left:3px solid var(--dorado);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--grafito)}
+.guide summary{cursor:pointer;font-family:var(--f-titulo);font-weight:700;color:var(--negro);font-size:13px}
+.guide p{margin:8px 0}
+.guide ol,.guide ul{margin:8px 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.guide a{color:var(--negro);font-weight:600}
+.box{background:#fff;border:1px solid var(--divisor);padding:16px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px}
+.box h2{margin:0}
+.box h3{margin:8px 0 0}
 
-.estado-select{width:100%;min-height:36px;padding:6px 10px;font-size:12px;border:1px solid var(--borde);border-radius:2px;background:#fff}
-.btn-sm{min-height:32px;padding:0 10px;font-size:11px}
+/* Inicio */
+.hello{background:var(--negro);color:#fff;padding:22px 20px;margin-bottom:16px}
+.hello h1{font-size:22px;margin-bottom:6px}
+.hello p{margin:6px 0;color:#DADADA}
+.hello .muted{color:#BDBDBD}
+.steps-how{margin:10px 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.steps-how b{color:var(--dorado)}
+.dash{display:grid;gap:10px}
+@media (min-width:640px){.dash{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:1000px){.dash{grid-template-columns:repeat(4,1fr)}}
+.dcard{display:flex;flex-direction:column;gap:4px;text-align:left;background:#fff;border:1px solid var(--divisor);padding:14px;transition:border-color .2s}
+.dcard:hover{border-color:var(--negro)}
+.dcard b{font-family:var(--f-titulo);font-size:14px}
+.dnum{font-size:13px;font-weight:600}
 
-@media (max-width: 900px) {
-  .pcol.p-fecha, .pcol.p-items, .pcol.p-total { display: none; }
-  .prow { flex-wrap: wrap; }
-  .pcol.p-cliente { flex-basis: 50%; }
-  .pcol.p-acciones { flex-basis: 100%; justify-content: flex-start; margin-top: 4px; }
-}
+/* Listas de combos, códigos y promociones */
+.clist{display:grid;gap:10px}
+@media (min-width:900px){.clist{grid-template-columns:repeat(2,1fr)}}
+.ccard{background:#fff;border:1px solid var(--divisor);display:grid;grid-template-columns:1fr;overflow:hidden}
+.ccard-ph{display:flex;gap:2px;background:var(--gris-claro)}
+.ccard-ph img,.ccard-ph .thumb-empty{flex:1;min-width:0;width:auto;height:110px;object-fit:cover}
+.ccard-b{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.ccard-b b{font-family:var(--f-titulo)}
+.cprice s{color:var(--texto-2)}
+.cprice b{font-size:16px}
+.pill{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:10px;white-space:nowrap;flex:0 0 auto}
+.pill.on{background:#E6F4EA;color:#1E6B34}
+.pill.off{background:var(--gris-claro);color:var(--texto-2)}
+.pill.warn{background:#FCE8E6;color:var(--rojo)}
+.lrow{display:flex;gap:12px;align-items:center;text-align:left;background:#fff;border:1px solid var(--divisor);padding:12px 14px;width:100%;transition:border-color .2s}
+.lrow:hover{border-color:var(--negro)}
+.lrow .grow{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lrow .muted{margin:0}
+.code{font-family:var(--f-titulo);font-weight:800;letter-spacing:.08em;background:var(--negro);color:var(--dorado);padding:6px 10px;border-radius:2px;flex:0 0 auto}
+.ptype{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--gris-claro);padding:6px 8px;border-radius:2px;flex:0 0 auto;max-width:90px;text-align:center}
+.warn-t{font-size:12px;color:var(--rojo);font-weight:500}
 
-/* Toast better for admin */
-.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);background:var(--negro);color:#fff;padding:12px 18px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:100;max-width:calc(100% - 32px)}
-.toast.show{opacity:1;transform:translate(-50%,0)}
+/* Editor de combo */
+.cb-rows{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.cb-row{display:grid;grid-template-columns:52px 1fr 36px;gap:8px;align-items:center;padding:8px;border:1px solid var(--divisor)}
+.cb-row img,.cb-row .thumb-empty{width:52px;height:52px;object-fit:cover;grid-row:span 2}
+.cb-row select[data-k=color]{grid-column:2}
+.cb-row .icon-btn{grid-row:1;grid-column:3}
+@media (min-width:640px){.cb-row{grid-template-columns:52px 2fr 1fr 36px}.cb-row img,.cb-row .thumb-empty{grid-row:auto}.cb-row select[data-k=color]{grid-column:auto}.cb-row .icon-btn{grid-row:auto;grid-column:auto}}
+.cb-prev{background:var(--gris-claro);padding:12px;margin:12px 0 0;font-size:14px}
+.cb-prev s{color:var(--texto-2)}
+.dlg-error{padding:0 16px}
+label.check span{display:flex;flex-direction:column;gap:2px}
+
+/* Textos y preguntas */
+.tgroup .form-grid{max-width:none}
+.tgroup .muted{margin:0}
+.frow{display:flex;gap:8px;align-items:center;border-top:1px solid var(--divisor);padding-top:8px}
+.fq{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:left;border:0;background:none;padding:4px 0}
+.fq:hover b{text-decoration:underline}
+.fq .muted{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acts{display:flex;gap:6px}
+
+/* Marketing */
+.mk-grid{display:grid;gap:14px;align-items:start}
+@media (min-width:1000px){.mk-grid{grid-template-columns:1fr 1fr}}
+.mk-grid .box{margin:0}
+.mk-list,.run-list{display:flex;flex-direction:column;max-height:420px;overflow-y:auto;border-top:1px solid var(--divisor)}
+.mrow{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--divisor)}
+.mrow .grow{display:flex;flex-direction:column;min-width:0}
+.mrow .muted{margin:0}
+.mrow.off{opacity:.55}
+.mk-run{border:1px solid var(--dorado);background:#FFFBEA;padding:12px;display:flex;flex-direction:column;gap:10px}
+.mk-run .muted{margin:0}
+.bar{height:8px;background:var(--divisor);border-radius:4px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--dorado);transition:width .3s}
+#mk-hist div{padding:4px 0;border-bottom:1px solid var(--divisor)}
+
+/* Pedidos */
+.olist{display:grid;gap:10px}
+@media (min-width:900px){.olist{grid-template-columns:repeat(2,1fr)}}
+.orow{background:#fff;border:1px solid var(--divisor);border-left:4px solid var(--borde);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.orow .muted{margin:0}
+.orow select{width:auto;min-height:36px;padding:4px 8px;font-size:13px}
+.orow.st-nuevo{border-left-color:var(--dorado)}
+.orow.st-pagado{border-left-color:#1E6B34}
+.orow.st-enviado{border-left-color:#1565C0}
+.orow.st-entregado{border-left-color:#9E9E9E}
+.orow.st-cancelado{border-left-color:var(--rojo);opacity:.7}
+
 @media (prefers-reduced-motion:reduce){.toast,.btn{transition:none}}
+a.btn{text-decoration:none}
+.btn-outline,.btn-ghost-dark{color:var(--negro)}
+.btn-outline:hover{color:#fff}
