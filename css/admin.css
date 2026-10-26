@@ -230,3 +230,6 @@ label.check span{display:flex;flex-direction:column;gap:2px}
 a.btn{text-decoration:none}
 .btn-outline,.btn-ghost-dark{color:var(--negro)}
 .btn-outline:hover{color:#fff}
+.redes{display:flex;flex-direction:column;gap:8px}
+.red-row{display:grid;grid-template-columns:150px 1fr 36px;gap:8px;align-items:center}
+@media (max-width:520px){.red-row{grid-template-columns:1fr 36px}.red-row input{grid-column:1/-1;grid-row:2}}

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/admin.css?v=20261026d">
+<link rel="stylesheet" href="css/admin.css?v=20261026e">
 </head>
 <body>
 
@@ -232,16 +232,17 @@
     <section data-panel="ventas" hidden>
       <details class="guide" open>
         <summary>¿Qué hago aquí?</summary>
-        <p><b>Para qué sirve:</b> datos de contacto y políticas que usa toda la tienda. El número de WhatsApp es al que llegan los pedidos: escríbelo con el 57 adelante, sin + ni espacios.</p>
+        <p><b>Para qué sirve:</b> datos de contacto, redes sociales y políticas que usa toda la tienda. El número de WhatsApp es al que llegan los pedidos: escríbelo con el 57 adelante, sin + ni espacios.</p>
       </details>
       <form id="cfg" class="form-grid">
         <h2>Contacto</h2>
         <label>WhatsApp de la tienda<input name="whatsapp" inputmode="numeric" placeholder="573001234567"><small>Con 57 adelante, sin + ni espacios. Aquí llegan los pedidos.</small></label>
         <label>Correo de la tienda<input name="email" type="email"><small>Se muestra en Ayuda y lo usas para enviar correos de Marketing.</small></label>
-        <label>Instagram (enlace)<input name="instagram" type="url"></label>
-        <label>TikTok (enlace)<input name="tiktok" type="url"></label>
-        <label>Facebook (enlace)<input name="facebook" type="url"></label>
         <label>Dirección de la tienda en internet<input name="sitioWeb" type="url" placeholder="https://…"><small>Se usa en los enlaces de los mensajes de Marketing. Vacío = la dirección actual.</small></label>
+        <h2>Redes sociales</h2>
+        <p class="muted small span2" style="margin:0">Solo se muestran en la tienda las redes que agregues aquí (en el inicio, en Ayuda y en el pie de página). Pega el enlace de tu perfil: en celulares se abre directo en la app de la red. Para quitar una, pulsa ✕.</p>
+        <div id="redes" class="redes span2"></div>
+        <div class="span2"><button type="button" id="add-red" class="btn btn-outline btn-sm">+ Agregar red social</button></div>
         <h2>Envíos, cambios y garantía</h2>
         <label>Días hábiles de entrega<input name="entregaDias" placeholder="Ej.: 3-5"><small>Se muestra en la ficha de cada producto.</small></label>
         <label>Días para cambios<input name="cambiosDias" inputmode="numeric" placeholder="Ej.: 30"></label>
@@ -324,6 +325,6 @@
 <datalist id="badges"><option>Nuevo</option><option>Más vendido</option><option>Top</option><option>Ideal para regalo</option><option>Edición limitada</option><option>Oferta</option></datalist>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="js/admin.js?v=20261026d"></script>
+<script src="js/admin.js?v=20261026e"></script>
 </body>
 </html>

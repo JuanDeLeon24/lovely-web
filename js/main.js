@@ -25,7 +25,7 @@
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
-  var ASSET_V = '20261026d';
+  var ASSET_V = '20261026e';
   /* Logos SVG: si el servidor los envía con un tipo incorrecto, se vuelven a pedir y se muestran igual */
   function fixSvg(img) {
     if (img._fx) return; img._fx = 1;
@@ -60,7 +60,49 @@
     window.lvNavigate(deep);
     setTimeout(function () { document.removeEventListener('visibilitychange', onVis); if (!left) window.lvNavigate(url); }, 2000);
   }
+  /* ---------- Redes sociales (panel → Configuración) ----------
+     En celulares cada enlace abre la app de la red, no su página web (que pide «abrir en la app» o descargarla).
+     Android: enlace intent:// con el paquete de la app; si no está instalada, Chrome abre la web solo.
+     iPhone: esquema propio de la app (instagram://, fb://…) y, si no abre en 2 s, la web. */
+  var IS_ANDROID = /Android/i.test(navigator.userAgent);
+  var REDES = {
+    instagram: { n: 'Instagram', pkg: 'com.instagram.android', ios: function (u, h) { return h ? 'instagram://user?username=' + h : ''; }, path: function (u, h) { return h ? 'instagram.com/_u/' + h : ''; } },
+    facebook: { n: 'Facebook', pkg: 'com.facebook.katana', ios: function (u) { return 'fb://facewebmodal/f?href=' + encodeURIComponent(u); }, android: function (u) { return 'fb://facewebmodal/f?href=' + encodeURIComponent(u); } },
+    tiktok: { n: 'TikTok', pkg: 'com.zhiliaoapp.musically', ios: function () { return ''; } },
+    youtube: { n: 'YouTube', pkg: 'com.google.android.youtube', ios: function (u) { return u.replace(/^https?:\/\//, 'youtube://'); } },
+    x: { n: 'X (Twitter)', pkg: 'com.twitter.android', ios: function (u, h) { return h ? 'twitter://user?screen_name=' + h : ''; } },
+    pinterest: { n: 'Pinterest', pkg: 'com.pinterest', ios: function (u) { return u.replace(/^https?:\/\/(www\.)?/, 'pinterest://'); } },
+    threads: { n: 'Threads', pkg: 'com.instagram.barcelona', ios: function (u, h) { return h ? 'barcelona://user?username=' + h : ''; } }
+  };
+  var handleOf = function (u) { var m = String(u).match(/^https?:\/\/[^/]+\/@?([A-Za-z0-9._-]+)/); return m && !/^(share|profile\.php|channel|watch|p|reel)$/.test(m[1]) ? m[1] : ''; };
+  function socialList() {
+    if (Array.isArray(C.redes)) return C.redes.filter(function (r) { return r && r.url; });
+    return ['instagram', 'tiktok', 'facebook'].filter(function (k) { return C[k] && !/^https?:\/\/(www\.)?[^/]+\/?$/.test(C[k]); }).map(function (k) { return { red: k, url: C[k] }; });
+  }
+  function openSocial(red, url) {
+    var R = REDES[red], h = handleOf(url);
+    if (!R || !IS_MOBILE) { window.open(url, '_blank', 'noopener'); return; }
+    if (IS_ANDROID) {
+      var deep = R.android ? R.android(url) : 'https://' + (R.path && R.path(url, h) || url.replace(/^https?:\/\//, ''));
+      var m = deep.match(/^(\w+):\/\/(.*)$/);
+      window.lvNavigate('intent://' + m[2] + '#Intent;scheme=' + m[1] + ';package=' + R.pkg + ';S.browser_fallback_url=' + encodeURIComponent(url) + ';end');
+      return;
+    }
+    var ios = R.ios(url, h); if (!ios) { window.lvNavigate(url); return; }
+    var left = false, mark = function () { left = true; };
+    document.addEventListener('visibilitychange', mark, { once: true }); window.addEventListener('pagehide', mark, { once: true }); window.addEventListener('blur', mark, { once: true });
+    window.lvNavigate(ios);
+    setTimeout(function () { if (!left) window.lvNavigate(url); }, 2000);
+  }
+  function renderSocial() {
+    var list = socialList(), html = list.map(function (r) {
+      var R = REDES[r.red]; return '<a href="' + esc(r.url) + '" target="_blank" rel="noopener" data-red="' + esc(r.red) + '">' + esc(R ? R.n : (r.nombre || 'Red social')) + '</a>';
+    }).join('');
+    $$('.social-links').forEach(function (box) { box.innerHTML = html; box.hidden = !list.length; });
+  }
   document.addEventListener('click', function (e) {
+    var s = e.target.closest && e.target.closest('a[data-red]');
+    if (s && !e.defaultPrevented && !e.button && !e.metaKey && !e.ctrlKey) { e.preventDefault(); openSocial(s.getAttribute('data-red'), s.href); return; }
     var a = e.target.closest && e.target.closest('a[href^="https://wa.me/"]');
     if (!a || !IS_MOBILE || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey) return;
     e.preventDefault(); openWhatsApp(a.href);
@@ -187,7 +229,7 @@
         '<div class="news"><div><h3>Sé el primero en conocer los lanzamientos</h3><p>Novedades, combos y ofertas por WhatsApp o correo, solo cuando haya algo nuevo. Te das de baja cuando quieras.</p></div>' +
         '<form class="js-news"><label class="sr-only" for="nl-n">Tu nombre</label><input id="nl-n" name="nombre" required placeholder="Tu nombre" autocomplete="given-name">' +
         '<label class="sr-only" for="nl">Correo electrónico</label><input id="nl" name="email" type="email" placeholder="Tu correo (opcional)" autocomplete="email"><button type="submit">SUSCRIBIRME</button></form></div>' +
-        '<div class="foot-cols"><div class="foot-brand"><img src="assets/img/logo-blanco.svg" alt="LV Accesorios" width="292" height="71" style="width:auto"><p>Pequeños detalles, grandes estilos.</p></div>' +
+        '<div class="foot-cols"><div class="foot-brand"><img src="assets/img/logo-blanco.svg" alt="LV Accesorios" width="292" height="71" style="width:auto"><p>Pequeños detalles, grandes estilos.</p><div class="social-links foot-social"></div></div>' +
         '<div><h4>TIENDA</h4>' + CATS.slice(0, 4).map(function (c) { return '<a href="tienda.html?cat=' + c.slug + '">' + c.name + '</a>'; }).join('') + '</div>' +
         '<div><h4>AYUDA</h4><a href="ayuda.html">Preguntas frecuentes</a><a href="ayuda.html#envios">Envíos y entregas</a><a href="ayuda.html#garantias">Cambios y garantías</a><a href="ayuda.html#contacto">Contacto</a></div>' +
         '<div><h4>LOVELY</h4><a href="nosotros.html">Quiénes somos</a><a href="ayuda.html#terminos">Términos y condiciones</a><a href="ayuda.html#datos">Política de datos (Habeas Data)</a></div></div>' +
@@ -205,7 +247,7 @@
         form.reset(); toast('¡Gracias! Envía el mensaje en WhatsApp para quedar suscrito.');
       });
     });
-    $$('[data-social]').forEach(function (a) { a.href = C[a.getAttribute('data-social')]; a.target = '_blank'; a.rel = 'noopener'; });
+    renderSocial();
     $$('[data-wa]').forEach(function (a) { a.href = waLink(a.getAttribute('data-wa')); a.target = '_blank'; a.rel = 'noopener'; });
     if (page === 'combo') $$('.nav-hot').forEach(function (a) { a.setAttribute('aria-current', 'page'); });
     Cart.badge(); rotateAnnounce(); promoPopup();

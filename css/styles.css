@@ -801,3 +801,7 @@ h1,h2,h3{font-family:var(--f-titulo);margin:0}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}.combo-card::after{display:none}}
 .totals [hidden],.co-step[hidden]{display:none}
 .cb-item-d .link-line{align-self:flex-start}
+.foot-social{margin-top:4px}
+.foot-social a{border-color:#3A3A3A;color:#fff;padding:8px 14px;font-size:12px}
+.foot-social a:hover{background:#fff;color:var(--negro)}
+.social-links[hidden]{display:none}

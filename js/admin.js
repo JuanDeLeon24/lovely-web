@@ -856,7 +856,42 @@
 
   /* ---------- Configuración ---------- */
   var cfgForm = $('#cfg');
-  function renderCfg() { $$('input', cfgForm).forEach(function (i) { i.value = S.cfg[i.name] == null ? '' : S.cfg[i.name]; }); }
+  function renderCfg() { $$('input[name]', cfgForm).forEach(function (i) { i.value = S.cfg[i.name] == null ? '' : S.cfg[i.name]; }); renderRedes(); }
+
+  /* Redes sociales: lista libre (se agregan o se quitan); reemplaza los antiguos campos instagram/tiktok/facebook */
+  var REDES = [['instagram', 'Instagram', 'https://www.instagram.com/tu_usuario'], ['facebook', 'Facebook', 'https://www.facebook.com/tu_pagina'], ['tiktok', 'TikTok', 'https://www.tiktok.com/@tu_usuario'], ['youtube', 'YouTube', 'https://www.youtube.com/@tu_canal'], ['x', 'X (Twitter)', 'https://x.com/tu_usuario'], ['pinterest', 'Pinterest', 'https://www.pinterest.com/tu_usuario'], ['threads', 'Threads', 'https://www.threads.net/@tu_usuario']];
+  function redes() {
+    if (!Array.isArray(S.cfg.redes)) {
+      S.cfg.redes = ['instagram', 'tiktok', 'facebook'].filter(function (k) { return S.cfg[k] && !/^https?:\/\/(www\.)?[^/]+\/?$/.test(S.cfg[k]); }).map(function (k) { return { red: k, url: S.cfg[k] }; });
+    }
+    return S.cfg.redes;
+  }
+  function renderRedes() {
+    $('#redes').innerHTML = redes().map(function (r, i) {
+      var d = REDES.filter(function (x) { return x[0] === r.red; })[0] || REDES[0];
+      return '<div class="red-row" data-i="' + i + '"><select data-k="red" aria-label="Red social">' + REDES.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === r.red ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>' +
+        '<input data-k="url" type="url" value="' + esc(r.url) + '" placeholder="' + d[2] + '" aria-label="Enlace del perfil"><button type="button" class="icon-btn" data-k="rm" aria-label="Quitar red">✕</button></div>';
+    }).join('') || '<p class="muted small" style="margin:0">No hay redes sociales: la tienda no muestra botones de redes.</p>';
+  }
+  function redesChanged() { ['instagram', 'tiktok', 'facebook'].forEach(function (k) { delete S.cfg[k]; }); setDirty(true); }
+  $('#redes').addEventListener('input', function (e) {
+    var row = e.target.closest('.red-row'), k = e.target.getAttribute('data-k'); if (!row || k !== 'url') return;
+    redes()[+row.getAttribute('data-i')].url = e.target.value.trim(); redesChanged();
+  });
+  $('#redes').addEventListener('change', function (e) {
+    var row = e.target.closest('.red-row'); if (!row || e.target.getAttribute('data-k') !== 'red') return;
+    redes()[+row.getAttribute('data-i')].red = e.target.value; redesChanged(); renderRedes();
+  });
+  $('#redes').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-k=rm]'); if (!b) return; var i = +b.closest('.red-row').getAttribute('data-i'), r = redes()[i];
+    if (r.url && !confirm('¿Quitar ' + (REDES.filter(function (x) { return x[0] === r.red; })[0] || ['', 'esta red'])[1] + ' de la tienda?')) return;
+    redes().splice(i, 1); redesChanged(); renderRedes();
+  });
+  $('#add-red').addEventListener('click', function () {
+    var used = redes().map(function (r) { return r.red; }), next = REDES.filter(function (x) { return used.indexOf(x[0]) < 0; })[0] || REDES[0];
+    redes().push({ red: next[0], url: '' }); redesChanged(); renderRedes();
+    var ins = $$('#redes input'); ins[ins.length - 1].focus();
+  });
   cfgForm.addEventListener('input', function (e) { if (!e.target.name) return; var v = e.target.value.trim(); if (v || S.cfg[e.target.name] != null) S.cfg[e.target.name] = v; setDirty(true); });
 
   /* ---------- Respaldo ---------- */

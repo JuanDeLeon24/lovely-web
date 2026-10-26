@@ -4,9 +4,16 @@
    modelo3d: true si el reloj tiene vista 3D en js/visor3d.js. */
 window.LV_CONFIG = {
   "whatsapp": "573122207234",
-  "instagram": "https://www.instagram.com/lovely_accesori0s?dlrf=YXQ0cWV1ZDgxNmdy",
-  "tiktok": "",
-  "facebook": "https://www.facebook.com/share/19tQ1fWbon/?mibextid=wwXIfr",
+  "redes": [
+    {
+      "red": "instagram",
+      "url": "https://www.instagram.com/lovely_accesori0s?dlrf=YXQ0cWV1ZDgxNmdy"
+    },
+    {
+      "red": "facebook",
+      "url": "https://www.facebook.com/share/19tQ1fWbon/?mibextid=wwXIfr"
+    }
+  ],
   "anuncioTitulo": "ENVÍOS A TODA COLOMBIA",
   "anuncioTexto": "Compra fácil por WhatsApp",
   "entregaDias": "3-5",
