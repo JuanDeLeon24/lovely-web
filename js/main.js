@@ -25,7 +25,7 @@
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
-  var ASSET_V = '20261026e';
+  var ASSET_V = '20261026f';
   /* Logos SVG: si el servidor los envía con un tipo incorrecto, se vuelven a pedir y se muestran igual */
   function fixSvg(img) {
     if (img._fx) return; img._fx = 1;
@@ -67,13 +67,15 @@
   var IS_ANDROID = /Android/i.test(navigator.userAgent);
   var REDES = {
     instagram: { n: 'Instagram', pkg: 'com.instagram.android', ios: function (u, h) { return h ? 'instagram://user?username=' + h : ''; }, path: function (u, h) { return h ? 'instagram.com/_u/' + h : ''; } },
-    facebook: { n: 'Facebook', pkg: 'com.facebook.katana', ios: function (u) { return 'fb://facewebmodal/f?href=' + encodeURIComponent(u); }, android: function (u) { return 'fb://facewebmodal/f?href=' + encodeURIComponent(u); } },
+    /* Con el número del perfil (…/people/Nombre/ID/, profile.php?id=ID) la app abre el perfil exacto; si no, la página dentro de la app */
+    facebook: { n: 'Facebook', pkg: 'com.facebook.katana', ios: function (u) { var id = fbId(u); return id ? 'fb://profile/' + id : 'fb://facewebmodal/f?href=' + encodeURIComponent(u); }, android: function (u) { var id = fbId(u); return id ? 'fb://profile/' + id : 'fb://facewebmodal/f?href=' + encodeURIComponent(u); } },
     tiktok: { n: 'TikTok', pkg: 'com.zhiliaoapp.musically', ios: function () { return ''; } },
     youtube: { n: 'YouTube', pkg: 'com.google.android.youtube', ios: function (u) { return u.replace(/^https?:\/\//, 'youtube://'); } },
     x: { n: 'X (Twitter)', pkg: 'com.twitter.android', ios: function (u, h) { return h ? 'twitter://user?screen_name=' + h : ''; } },
     pinterest: { n: 'Pinterest', pkg: 'com.pinterest', ios: function (u) { return u.replace(/^https?:\/\/(www\.)?/, 'pinterest://'); } },
     threads: { n: 'Threads', pkg: 'com.instagram.barcelona', ios: function (u, h) { return h ? 'barcelona://user?username=' + h : ''; } }
   };
+  var fbId = function (u) { var m = String(u).match(/facebook\.com\/(?:people\/[^/]+\/(\d{6,})|profile\.php\?(?:[^#]*&)?id=(\d{6,})|(\d{6,})(?:[/?#]|$))/); return m ? m[1] || m[2] || m[3] : ''; };
   var handleOf = function (u) { var m = String(u).match(/^https?:\/\/[^/]+\/@?([A-Za-z0-9._-]+)/); return m && !/^(share|profile\.php|channel|watch|p|reel)$/.test(m[1]) ? m[1] : ''; };
   function socialList() {
     if (Array.isArray(C.redes)) return C.redes.filter(function (r) { return r && r.url; });

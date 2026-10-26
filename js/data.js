@@ -11,7 +11,7 @@ window.LV_CONFIG = {
     },
     {
       "red": "facebook",
-      "url": "https://www.facebook.com/share/19tQ1fWbon/?mibextid=wwXIfr"
+      "url": "https://www.facebook.com/people/Lovely-Accesorios/61577411013491/"
     }
   ],
   "anuncioTitulo": "ENVÍOS A TODA COLOMBIA",
