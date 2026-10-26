@@ -5,7 +5,7 @@
 window.LV_CONFIG = {
   "whatsapp": "573122207234",
   "instagram": "https://www.instagram.com/lovely_accesori0s?dlrf=YXQ0cWV1ZDgxNmdy",
-  "tiktok": "https://tiktok.com/",
+  "tiktok": "",
   "facebook": "https://www.facebook.com/share/19tQ1fWbon/?mibextid=wwXIfr",
   "anuncioTitulo": "ENVÍOS A TODA COLOMBIA",
   "anuncioTexto": "Compra fácil por WhatsApp",
