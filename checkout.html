@@ -10,16 +10,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css?v=20261026a">
+<script>try{var t=localStorage.getItem("lv_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)}catch(e){}</script><link rel="stylesheet" href="css/styles.css?v=20261026b">
 </head>
 <body data-page="checkout" class="co-body">
 <header class="co-header"><div class="wrap">
-  <a href="index.html" aria-label="Volver a la tienda"><img src="assets/img/logo-negro.svg" alt="LV Accesorios" style="height:28px;width:auto"></a>
+  <a href="index.html" aria-label="Volver a la tienda"><img class="co-logo" src="assets/img/logo-negro.svg" alt="LV Accesorios"></a>
   <span class="secure"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Confirmar pedido por WhatsApp</span>
 </div></header>
 
 <main class="wrap">
-  <ol class="steps" aria-label="Pasos de compra"><li>1. Datos y dirección</li><li>2. Envío y confirmación</li></ol>
+  <ol class="steps" aria-label="Pasos de compra"><li>1. Tus datos</li><li>2. Envío y WhatsApp</li></ol>
 
   <div class="co-grid">
     <div class="panel">
@@ -57,54 +57,45 @@
           </div>
           <div class="fields"><label class="field">Dirección completa<input required autocomplete="street-address" placeholder="Calle, número, barrio, apto / casa, referencia" name="direccion"></label></div>
           
-          <!-- HABEAS DATA - Consentimiento tratamiento de datos (Ley 1581/2012 Colombia) -->
-          <fieldset class="habeas-fieldset" style="margin-top:16px;padding:16px;background:var(--gris-claro);border-radius:12px;border:1px solid var(--borde)">
-            <legend style="font-weight:600;margin-bottom:12px;font-size:14px">📋 Autorización Tratamiento de Datos Personales (Ley 1581/2012)</legend>
-            
-            <label class="checkbox-field" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer;font-size:13px;line-height:1.5">
-              <input type="checkbox" name="habeas_tratamiento" required style="margin-top:2px;accent-color:var(--oro);width:18px;height:18px;flex-shrink:0">
-              <span>
-                <strong>Acepto el tratamiento de mis datos personales</strong> para la gestión del pedido, facturación, envío y atención al cliente.
-                <a href="ayuda.html#datos" target="_blank" style="color:var(--oro);text-decoration:underline">Conozca nuestra Política de Tratamiento de Datos</a>.
-              </span>
-            </label>
-            
-            <label class="checkbox-field" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;line-height:1.5">
-              <input type="checkbox" name="marketing_optin" style="margin-top:2px;accent-color:var(--oro);width:18px;height:18px;flex-shrink:0">
-              <span>
-                <strong>Deseo recibir novedades, promociones y lanzamientos</strong> por WhatsApp y correo electrónico.
-                <br><small style="color:var(--grafito)">Podrá darse de baja en cualquier momento respondiendo "BAJA" o desde el enlace en nuestros correos.</small>
-              </span>
-            </label>
+          <fieldset class="consent">
+            <legend>Autorización de tratamiento de datos (Ley 1581 de 2012)</legend>
+            <label class="consent-item"><input type="checkbox" name="habeas_tratamiento" required>
+              <span><strong>Acepto el tratamiento de mis datos personales</strong> para gestionar el pedido, la facturación, el envío y la atención al cliente. <a class="link-line" href="ayuda.html#datos" target="_blank">Política de tratamiento de datos</a></span></label>
+            <label class="consent-item"><input type="checkbox" name="marketing_optin">
+              <span><strong>Quiero recibir novedades y promociones</strong> por WhatsApp y correo. <small>Puedes darte de baja cuando quieras respondiendo «BAJA».</small></span></label>
           </fieldset>
-
-          <button class="btn btn-dark btn-block" type="submit" style="margin-top:16px">Continuar a envío</button>
+          <button class="btn btn-dark btn-block co-next" type="submit">Continuar a envío</button>
         </form>
       </section>
 
       <section class="co-step" data-step="2" hidden>
-        <h1>Método de envío y confirmación</h1>
-        <p class="note" style="margin:-6px 0 18px">Tarifas para <strong style="color:var(--ink)" id="city-label"></strong>. <button id="back-1" style="border:0;background:none;text-decoration:underline;padding:0;font-size:12px">Cambiar datos</button></p>
-        <label class="option"><input type="radio" name="envio" value="estandar" checked><span class="t"><strong>Envío estándar</strong><small>3–5 días hábiles · Inter Rapidísimo / Servientrega</small></span><span class="p" id="ship-estandar">$ 12.000</span></label>
-        <label class="option"><input type="radio" name="envio" value="express"><span class="t"><strong>Envío express</strong><small>1–2 días hábiles · Ciudades principales</small></span><span class="p" id="ship-express">$ 18.000</span></label>
-        <label class="option"><input type="radio" name="envio" value="contraentrega"><span class="t"><strong>Contra entrega</strong><small>Paga al recibir · Según cobertura</small></span><span class="p" id="ship-contra">$ 15.000</span></label>
-        <p class="note" style="font-size:12px;margin-top:8px">El costo final se confirma según tu ciudad exacta. <a href="ayuda.html#envios" target="_blank">Ver cobertura y tiempos</a>.</p>
-        
-        <div style="margin-top:16px;padding:16px;background:var(--gris-claro);border-radius:12px;border:1px solid var(--borde)">
-          <h3 style="margin:0 0 12px;font-size:14px">📋 Resumen de tu pedido</h3>
-          <div id="order-summary" style="font-size:13px;line-height:1.6"></div>
-        </div>
-        
-        <p class="note" style="font-size:12px;margin-top:12px">Al confirmar, se abrirá WhatsApp con tu pedido listo para enviar. Nuestro equipo te contactará en minutos para coordinar el pago y envío.</p>
-        <button class="btn btn-gold btn-block" id="confirm-order" style="margin-top:8px">Confirmar y abrir WhatsApp</button>
+        <h1>Método de envío</h1>
+        <p class="note co-city">Envío a <strong id="city-label"></strong>. <button type="button" id="back-1" class="text-btn">Cambiar datos</button></p>
+        <label class="option"><input type="radio" name="envio" value="estandar" checked><span class="t"><strong>Envío estándar</strong><small>3–5 días hábiles · Inter Rapidísimo / Servientrega</small></span><span class="p" id="ship-estandar"></span></label>
+        <label class="option"><input type="radio" name="envio" value="express"><span class="t"><strong>Envío express</strong><small>1–2 días hábiles · ciudades principales</small></span><span class="p" id="ship-express"></span></label>
+        <label class="option"><input type="radio" name="envio" value="contraentrega"><span class="t"><strong>Contra entrega</strong><small>Pagas al recibir · según cobertura</small></span><span class="p" id="ship-contraentrega"></span></label>
+        <p class="note" id="ship-free" hidden></p>
+        <p class="note">El costo final se confirma según tu ciudad exacta. <a class="link-line" href="ayuda.html#envios" target="_blank">Cobertura y tiempos</a></p>
+        <p class="note">Al continuar se abre WhatsApp con tu pedido escrito. Solo queda registrado cuando lo envías.</p>
+        <button class="btn btn-gold btn-block" id="confirm-order" type="button">Enviar pedido por WhatsApp</button>
       </section>
-
       <section class="co-step" data-step="3" hidden>
         <div class="done-box">
-          <div class="check"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-          <h1 style="margin:0">¡Pedido enviado por WhatsApp!</h1>
-          <p style="margin:0;color:var(--grafito);line-height:1.7;max-width:420px">Tu solicitud <strong id="order-n"></strong> ha sido enviada. Nuestro equipo te responderá por WhatsApp en pocos minutos para confirmar detalles y coordinar el pago.</p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px">
+          <h1>¿Enviaste el mensaje en WhatsApp?</h1>
+          <p class="co-lead">Abrimos WhatsApp con tu pedido <strong id="pending-n"></strong> escrito. Para que lo recibamos, pulsa <strong>Enviar</strong> en el chat. Hasta entonces el pedido no está registrado y tu carrito sigue guardado.</p>
+          <div class="co-actions">
+            <button class="btn btn-dark" id="sent-yes" type="button">Sí, ya lo envié</button>
+            <a class="btn btn-gold" id="wa-retry" href="#" target="_blank" rel="noopener">Abrir WhatsApp otra vez</a>
+            <button class="btn btn-outline" id="sent-edit" type="button">Volver y editar</button>
+          </div>
+        </div>
+      </section>
+      <section class="co-step" data-step="4" hidden>
+        <div class="done-box">
+          <div class="check"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+          <h1>¡Pedido recibido!</h1>
+          <p class="co-lead">Tu pedido <strong id="order-n"></strong> quedó registrado. Te responderemos por WhatsApp para confirmar los detalles y coordinar el pago.</p>
+          <div class="co-actions">
             <a class="btn btn-dark" id="wa-confirm" href="#" target="_blank" rel="noopener">Hablar por WhatsApp</a>
             <a class="btn btn-outline" href="index.html">Volver a la tienda</a>
           </div>
@@ -114,19 +105,18 @@
 
     <aside class="panel summary" aria-label="Resumen del pedido">
       <h2>TU PEDIDO</h2>
-      <p class="note" id="co-empty" hidden></p>
-      <div id="lines" style="display:flex;flex-direction:column;gap:14px"></div>
+            <div id="lines" class="lines"></div>
       <div class="totals">
         <div><span>Subtotal</span><span id="t-sub"></span></div>
         <div><span>Envío</span><span id="t-ship"></span></div>
         <div class="grand"><span>Total</span><span id="t-total"></span></div>
       </div>
-      <div class="help-box"><b>¿Dudas con su compra?</b> <a data-wa="Hola Lovely, necesito ayuda con mi compra." href="#" style="text-decoration:underline">Escríbanos por WhatsApp</a> y le acompañamos.</div>
+      <div class="help-box"><b>¿Dudas con su compra?</b> <a data-wa="Hola Lovely, necesito ayuda con mi compra." href="#">Escríbanos por WhatsApp</a> y le acompañamos.</div>
     </aside>
   </div>
 </main>
 <div id="site-footer"></div>
-<script src="js/data.js?v=20261026a"></script>
-<script src="js/main.js?v=20261026a"></script>
+<script src="js/data.js?v=20261026b"></script>
+<script src="js/main.js?v=20261026b"></script>
 </body>
 </html>

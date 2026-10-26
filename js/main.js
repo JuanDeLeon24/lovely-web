@@ -24,7 +24,7 @@
   var money = function (n) { return n ? '$ ' + n.toLocaleString('es-CO') : 'Precio por confirmar'; };
   var photo = function (n, sm) { return 'assets/products/' + n + (sm ? '-sm' : '') + '.webp'; };
   var colorImg = function (p, colorName) { var c = p.colors.filter(function (x) { return x.name === colorName; })[0] || p.colors[0]; return c.img; };
-  var ASSET_V = '20261025b';
+  var ASSET_V = '20261026b';
   /* Logos SVG: si el servidor los envía con un tipo incorrecto, se vuelven a pedir y se muestran igual */
   function fixSvg(img) {
     if (img._fx) return; img._fx = 1;
@@ -392,228 +392,144 @@
   }
 
   /* ---------- Checkout ---------- */
+  /* ---------- Checkout por WhatsApp ----------
+     El pedido solo cuenta como enviado cuando el cliente confirma que pulsó «Enviar» en WhatsApp:
+     la página no puede saberlo por sí sola. Mientras tanto queda pendiente y el carrito se conserva. */
+  var SHIPPING = {
+    estandar: { label: 'Envío estándar', detalle: '3–5 días hábiles', costo: 12000 },
+    express: { label: 'Envío express', detalle: '1–2 días hábiles', costo: 18000 },
+    contraentrega: { label: 'Contra entrega', detalle: 'pago al recibir', costo: 15000 }
+  };
+  /* Envío estándar gratis si la promoción «envio-gratis» está activa y el subtotal llega al mínimo de su texto */
+  function freeShippingMin() {
+    var pr = (C.promociones || []).filter(function (x) { return x.id === 'envio-gratis' && x.activo; })[0];
+    var m = pr && String(pr.texto || '').match(/\$\s*([\d.]+)/);
+    return m ? +m[1].replace(/\./g, '') : 0;
+  }
+  function findProduct(id) { return PRODUCTS.filter(function (q) { return q.id === id; })[0]; }
+  function cartTotals(metodo) {
+    var it = Cart.items(), sub = it.reduce(function (a, x) { var p = findProduct(x.id); return a + (p ? p.price * x.qty : 0); }, 0);
+    var opt = SHIPPING[metodo], min = freeShippingMin();
+    var ship = opt ? (metodo === 'estandar' && min && sub > min ? 0 : opt.costo) : null;
+    return { items: it, sub: sub, ship: ship, total: sub + (ship || 0) };
+  }
+
   function initCheckout() {
-    var step = 1;
-    var orderData = {}; // Almacena todos los datos del pedido
-    var lastTotals = { sub: 0, ship: 0 }; // Últimos totales válidos (para el paso 3)
+    var step = 1, cliente = null, PENDING = 'lv_pending_order';
+    var envioSel = function () { var r = $('input[name="envio"]:checked'); return r ? r.value : ''; };
+    var readPending = function () { try { return JSON.parse(sessionStorage.getItem(PENDING) || 'null'); } catch (e) { return null; } };
+    var writePending = function (o) { try { o ? sessionStorage.setItem(PENDING, JSON.stringify(o)) : sessionStorage.removeItem(PENDING); } catch (e) {} };
 
-    function renderSummary() {
-      var it = Cart.items(), box = $('#lines');
-      if (!it.length) {
-        box.innerHTML = (step === 3 && orderData.numero)
-          ? '<p class="note">Pedido <strong>' + orderData.numero + '</strong> enviado por WhatsApp. <a class="link-line" href="tienda.html">Seguir comprando</a></p>'
-          : '<p class="note">Tu carrito está vacío. <a class="link-line" href="tienda.html">Ir a la tienda</a></p>';
-      } else {
-        box.innerHTML = it.map(function (x, i) {
-          var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; if (!p) return '';
-          return '<div class="line-item"><div class="th"><img src="' + photo(colorImg(p, x.color), true) + '" alt=""></div><div class="d"><strong>' + p.name + '</strong><small>' + x.color + ' · Cant. ' + x.qty + '</small><button class="rm" data-i="' + i + '">Quitar</button></div><strong>' + money(p.price * x.qty) + '</strong></div>';
-        }).join('');
-      }
-      var sub = it.reduce(function (a, x) { var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; return a + (p ? p.price * x.qty : 0); }, 0);
-      var ship = 0;
-      if (step >= 2) {
-        var envioSel = $('input[name="envio"]:checked');
-        if (envioSel) {
-          if (envioSel.value === 'estandar') ship = 12000;
-          else if (envioSel.value === 'express') ship = 18000;
-          else if (envioSel.value === 'contraentrega') ship = 15000;
-        }
-      }
-      if (it.length) lastTotals = { sub: sub, ship: ship };
-      else if (step === 3 && lastTotals.sub) { sub = lastTotals.sub; ship = lastTotals.ship; }
-      $('#t-sub').textContent = sub ? money(sub) : 'Por confirmar';
-      $('#t-ship').textContent = it.length ? (ship ? money(ship) : 'Seleccione envío') : (step === 3 && lastTotals.sub ? money(ship) : 'Se calcula en el paso 2');
-      $('#t-total').textContent = (sub + ship) ? money(sub + ship) : 'Por confirmar';
-      $('#co-empty').hidden = it.length > 0;
-
-      // Actualizar resumen de pedido en paso 2
-      if (step === 2) {
-        var summaryBox = $('#order-summary');
-        if (summaryBox) {
-          var envioSel = $('input[name="envio"]:checked');
-          var envioLabel = envioSel ? (envioSel.value === 'estandar' ? 'Envío estándar' : envioSel.value === 'express' ? 'Envío express' : 'Contra entrega') : '—';
-          var itemsHtml = it.map(function(x) {
-            var p = PRODUCTS.filter(function(q) { return q.id === x.id; })[0];
-            return '• ' + (p ? p.name : x.id) + ' (' + x.color + ') x' + x.qty + ' = ' + money(p ? p.price * x.qty : 0);
-          }).join('<br>');
-          summaryBox.innerHTML = 
-            '<strong>Productos:</strong><br>' + itemsHtml + '<br><br>' +
-            '<strong>Subtotal:</strong> ' + money(sub) + '<br>' +
-            '<strong>Envío (' + envioLabel + '):</strong> ' + money(ship) + '<br>' +
-            '<strong style="font-size:15px">Total: ' + money(sub + ship) + '</strong>';
-        }
-      }
+    /* Precios de envío en las opciones, desde una sola tabla */
+    function renderShipOptions() {
+      var t = cartTotals('estandar'), min = freeShippingMin();
+      Object.keys(SHIPPING).forEach(function (k) {
+        var el = $('#ship-' + k); if (!el) return;
+        el.textContent = k === 'estandar' && min && t.sub > min ? 'Gratis' : money(SHIPPING[k].costo);
+      });
+      var note = $('#ship-free'); if (note) { note.hidden = !min; note.textContent = min ? (t.sub > min ? 'Tu pedido tiene envío estándar gratis.' : 'Envío estándar gratis en pedidos superiores a ' + money(min) + '.') : ''; }
     }
 
-    $('#lines').addEventListener('click', function (e) { var b = e.target.closest('.rm'); if (b) { Cart.remove(+b.getAttribute('data-i')); renderSummary(); } });
+    function renderSummary() {
+      var t = cartTotals(step >= 2 ? envioSel() : ''), box = $('#lines');
+      box.innerHTML = t.items.length ? t.items.map(function (x, i) {
+        var p = findProduct(x.id); if (!p) return '';
+        return '<div class="line-item"><div class="th"><img src="' + photo(colorImg(p, x.color), true) + '" alt=""></div><div class="d"><strong>' + esc(p.name) + '</strong><small>' + esc(x.color) + ' · Cant. ' + x.qty + '</small>' +
+          (step < 3 ? '<button class="rm" data-i="' + i + '">Quitar</button>' : '') + '</div><strong>' + money(p.price * x.qty) + '</strong></div>';
+      }).join('') : '<p class="note">Tu carrito está vacío. <a class="link-line" href="tienda.html">Ir a la tienda</a></p>';
+      $('#t-sub').textContent = t.items.length ? money(t.sub) : '—';
+      $('#t-ship').textContent = step < 2 ? 'Se calcula en el paso 2' : t.ship === null ? 'Elige un envío' : t.ship === 0 ? 'Gratis' : money(t.ship);
+      $('#t-total').textContent = t.items.length ? money(t.total) : '—';
+      $('#confirm-order').disabled = !t.items.length;
+      renderShipOptions();
+    }
 
     function go(n) {
       step = n;
       $$('.co-step').forEach(function (s) { s.hidden = +s.getAttribute('data-step') !== n; });
-      $$('.steps li').forEach(function (li, i) { li.className = (i + 1 < n || n === 3) ? 'done' : (i + 1 === n ? 'on' : ''); });
-      if (n >= 2) $('#city-label').textContent = ($('#ciudad').value || 'tu ciudad') + ', ' + ($('#depto').value || '');
+      $$('.steps li').forEach(function (li, i) { li.className = n === 4 || i + 1 < Math.min(n, 2) ? 'done' : (i + 1 === Math.min(n, 2) ? 'on' : ''); });
+      if (n >= 2 && cliente) $('#city-label').textContent = cliente.ciudad + ', ' + cliente.departamento;
       renderSummary(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Paso 1: Validar formulario y capturar datos
+    $('#lines').addEventListener('click', function (e) { var b = e.target.closest('.rm'); if (b) { Cart.remove(+b.getAttribute('data-i')); renderSummary(); } });
+    $$('input[name="envio"]').forEach(function (r) { r.addEventListener('change', renderSummary); });
+
+    /* Paso 1: datos */
     $('#form-datos').addEventListener('submit', function (e) {
       e.preventDefault();
-      var form = e.target;
-      var formData = new FormData(form);
-      
-      // Validar campos requeridos (quitamos habeas_pago que era para Wompi)
-      var required = ['nombre', 'tipoDoc', 'documento', 'email', 'celular', 'departamento', 'ciudad', 'direccion', 'habeas_tratamiento'];
-      for (var field of required) {
-        if (!formData.get(field)) {
-          toast('Por favor complete: ' + field);
-          return;
-        }
-      }
-      
-      // Validar email
-      var email = formData.get('email');
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        toast('Correo electrónico inválido');
-        return;
-      }
-      
-      // Validar celular colombiano (10 dígitos)
-      var celular = formData.get('celular').replace(/\D/g, '');
-      if (celular.length !== 10 || !/^3\d{9}$/.test(celular)) {
-        toast('Celular inválido. Use formato 3001234567');
-        return;
-      }
-      
-      // Guardar datos del paso 1
-      orderData.cliente = {
-        nombre: formData.get('nombre').trim(),
-        tipoDoc: formData.get('tipoDoc'),
-        documento: formData.get('documento').trim(),
-        email: email.toLowerCase(),
-        celular: celular,
-        departamento: formData.get('departamento'),
-        ciudad: formData.get('ciudad').trim(),
-        direccion: formData.get('direccion').trim(),
-        habeasTratamiento: true,
-        marketingOptin: formData.get('marketing_optin') === 'on'
-      };
-      
+      var f = new FormData(e.target), get = function (k) { return String(f.get(k) || '').trim(); };
+      var falta = ['nombre', 'documento', 'email', 'celular', 'departamento', 'ciudad', 'direccion'].filter(function (k) { return !get(k); });
+      if (falta.length) { toast('Completa todos los campos para continuar.'); var el = e.target.elements[falta[0]]; if (el) el.focus(); return; }
+      if (!f.get('habeas_tratamiento')) { toast('Debes aceptar el tratamiento de datos para continuar.'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(get('email'))) { toast('Revisa tu correo electrónico.'); e.target.elements.email.focus(); return; }
+      var cel = get('celular').replace(/\D/g, '').replace(/^57(?=3\d{9}$)/, '');
+      if (!/^3\d{9}$/.test(cel)) { toast('Celular inválido: usa 10 dígitos, por ejemplo 3001234567.'); e.target.elements.celular.focus(); return; }
+      cliente = { nombre: get('nombre'), tipoDoc: get('tipoDoc'), documento: get('documento'), email: get('email').toLowerCase(), celular: cel,
+        departamento: get('departamento'), ciudad: get('ciudad'), direccion: get('direccion'), habeasTratamiento: true, marketingOptin: f.get('marketing_optin') === 'on' };
       go(2);
     });
-
-    // Paso 2: Seleccionar envío y confirmar por WhatsApp
-    $('#confirm-order').addEventListener('click', function () {
-      var envioSel = $('input[name="envio"]:checked');
-      if (!envioSel) { toast('Seleccione un método de envío'); return; }
-      orderData.envio = {
-        metodo: envioSel.value,
-        costo: envioSel.value === 'estandar' ? 12000 : envioSel.value === 'express' ? 18000 : 15000
-      };
-      
-      // Generar número de pedido
-      orderData.numero = 'LV-' + String(Date.now()).slice(-6);
-      orderData.fecha = new Date().toISOString();
-      orderData.estado = 'pendiente_confirmacion';
-      
-      // Calcular totales
-      var it = Cart.items();
-      var sub = it.reduce(function (a, x) { var p = PRODUCTS.filter(function (q) { return q.id === x.id; })[0]; return a + (p ? p.price * x.qty : 0); }, 0);
-      orderData.pago = {
-        subtotal: sub,
-        envio: orderData.envio.costo,
-        total: sub + orderData.envio.costo,
-        items: it.map(function(x) {
-          var p = PRODUCTS.filter(function(q) { return q.id === x.id; })[0];
-          return {
-            id: p.id,
-            nombre: p.name,
-            color: x.color,
-            cantidad: x.qty,
-            precioUnitario: p.price,
-            subtotal: p.price * x.qty
-          };
-        })
-      };
-      
-      // Enviar por WhatsApp
-      enviarWhatsAppPedido(orderData);
-      
-      // Guardar en localStorage para admin
-      guardarPedidoAdmin(orderData);
-      
-      // Guardar para marketing si optó
-      if (orderData.cliente.marketingOptin) {
-        guardarParaMarketing(orderData.cliente);
-      }
-      
-      // Limpiar carrito y mostrar confirmación
-      Cart.set([]);
-      $('#order-n').textContent = orderData.numero;
-      var waC = $('#wa-confirm');
-      if (waC) waC.href = waLink('Hola Lovely, quiero saber el estado de mi pedido ' + orderData.numero);
-      go(3);
-    });
-
     $('#back-1').addEventListener('click', function () { go(1); });
 
-    // Generar mensaje de WhatsApp y abrir
-    function enviarWhatsAppPedido(orderData) {
-      var itemsText = orderData.pago.items.map(function(i) {
-        return '• ' + i.nombre + ' (' + i.color + ') x' + i.cantidad + ' = ' + money(i.subtotal);
-      }).join('\n');
-      
-      var envioLabels = {
-        'estandar': 'Envío estándar (3-5 días hábiles)',
-        'express': 'Envío express (1-2 días hábiles)',
-        'contraentrega': 'Contra entrega (pago al recibir)'
+    /* Paso 2 → 3: abre WhatsApp y deja el pedido pendiente (no se registra todavía) */
+    function buildOrder() {
+      var metodo = envioSel(), t = cartTotals(metodo), prev = readPending();
+      var sig = JSON.stringify([t.items, metodo, cliente]);
+      return {
+        numero: prev && prev.sig === sig ? prev.numero : 'LV-' + String(Date.now()).slice(-6), sig: sig,
+        fecha: new Date().toISOString(), estado: 'pendiente_confirmacion', cliente: cliente,
+        envio: { metodo: metodo, costo: t.ship },
+        pago: { subtotal: t.sub, envio: t.ship, total: t.total, items: t.items.map(function (x) { var p = findProduct(x.id); return { id: p.id, nombre: p.name, color: x.color, cantidad: x.qty, precioUnitario: p.price, subtotal: p.price * x.qty }; }) }
       };
-      
-      var msg = '🛍 *NUEVO PEDIDO ' + orderData.numero + '*\n\n' +
-        '👤 *Cliente:* ' + orderData.cliente.nombre + '\n' +
-        '📞 *WhatsApp:* +57' + orderData.cliente.celular + '\n' +
-        '📧 *Email:* ' + orderData.cliente.email + '\n' +
-        '🆔 *Doc:* ' + orderData.cliente.tipoDoc + ' ' + orderData.cliente.documento + '\n' +
-        '📍 *Envío a:* ' + orderData.cliente.direccion + ', ' + orderData.cliente.ciudad + ', ' + orderData.cliente.departamento + '\n' +
-        '🚚 *Método envío:* ' + (envioLabels[orderData.envio.metodo] || orderData.envio.metodo) + ' (' + money(orderData.envio.costo) + ')\n\n' +
-        '*Detalle:*\n' + itemsText + '\n\n' +
-        '*Subtotal:* ' + money(orderData.pago.subtotal) + '\n' +
-        '*Envío:* ' + money(orderData.pago.envio) + '\n' +
-        '*TOTAL:* ' + money(orderData.pago.total) + '\n\n' +
-        '🕐 ' + new Date(orderData.fecha).toLocaleString('es-CO') + '\n' +
-        (orderData.cliente.marketingOptin ? '✅ Acepta recibir promociones' : '❌ No quiere promociones') + '\n\n' +
-        '—\nPedido generado desde lovely-web';
-      
-      var adminPhone = C.whatsapp || '57XXXXXXXXXX';
-      var waUrl = 'https://wa.me/' + adminPhone + '?text=' + encodeURIComponent(msg);
-      
-      // Abrir WhatsApp en nueva pestaña
-      window.open(waUrl, '_blank', 'noopener,noreferrer');
-      
-      toast('Abriendo WhatsApp con tu pedido...');
     }
-
-    function guardarPedidoAdmin(orderData) {
-      var adminOrders = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
-      adminOrders.unshift(orderData);
-      localStorage.setItem('lv_admin_orders', JSON.stringify(adminOrders.slice(0, 200)));
+    function waOrderUrl(o) {
+      var opt = SHIPPING[o.envio.metodo];
+      var msg = '*PEDIDO ' + o.numero + '*\n\n' +
+        '*Cliente:* ' + o.cliente.nombre + '\n*WhatsApp:* +57' + o.cliente.celular + '\n*Correo:* ' + o.cliente.email + '\n' +
+        '*Documento:* ' + o.cliente.tipoDoc + ' ' + o.cliente.documento + '\n' +
+        '*Envío a:* ' + o.cliente.direccion + ', ' + o.cliente.ciudad + ', ' + o.cliente.departamento + '\n' +
+        '*Método:* ' + opt.label + ' (' + opt.detalle + ')\n\n*Detalle:*\n' +
+        o.pago.items.map(function (i) { return '• ' + i.nombre + ' (' + i.color + ') x' + i.cantidad + ' = ' + money(i.subtotal); }).join('\n') + '\n\n' +
+        '*Subtotal:* ' + money(o.pago.subtotal) + '\n*Envío:* ' + (o.pago.envio ? money(o.pago.envio) : 'Gratis') + '\n*TOTAL:* ' + money(o.pago.total) + '\n\n' +
+        (o.cliente.marketingOptin ? 'Acepta recibir promociones.' : 'No desea recibir promociones.');
+      return 'https://wa.me/' + C.whatsapp + '?text=' + encodeURIComponent(msg);
     }
-
-    function guardarParaMarketing(cliente) {
-      var lista = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
-      if (!lista.find(function(c) { return c.email === cliente.email; })) {
-        lista.push({
-          email: cliente.email,
-          nombre: cliente.nombre,
-          celular: cliente.celular,
-          fechaRegistro: new Date().toISOString(),
-          fuente: 'checkout:' + orderData.numero,
-          activo: true
-        });
-        localStorage.setItem('lv_marketing', JSON.stringify(lista));
-      }
+    function showPending(o) {
+      $('#pending-n').textContent = o.numero;
+      $('#wa-retry').href = waOrderUrl(o);
+      go(3);
     }
+    $('#confirm-order').addEventListener('click', function () {
+      if (!Cart.items().length) { toast('Tu carrito está vacío.'); return; }
+      if (!envioSel()) { toast('Elige un método de envío.'); return; }
+      var o = buildOrder(); writePending(o);
+      window.open(waOrderUrl(o), '_blank', 'noopener');
+      showPending(o);
+    });
 
-    go(1);
+    /* Paso 3 → 4: solo aquí el pedido queda registrado y se vacía el carrito */
+    $('#sent-yes').addEventListener('click', function () {
+      var o = readPending(); if (!o) { go(2); return; }
+      delete o.sig; o.estado = 'pendiente'; o.fecha = new Date().toISOString();
+      try {
+        var all = JSON.parse(localStorage.getItem('lv_admin_orders') || '[]');
+        if (!all.some(function (x) { return x.numero === o.numero; })) { all.unshift(o); localStorage.setItem('lv_admin_orders', JSON.stringify(all.slice(0, 200))); }
+        if (o.cliente.marketingOptin) {
+          var lista = JSON.parse(localStorage.getItem('lv_marketing') || '[]');
+          if (!lista.some(function (c) { return c.email === o.cliente.email; })) { lista.push({ email: o.cliente.email, nombre: o.cliente.nombre, celular: o.cliente.celular, fechaRegistro: o.fecha, fuente: 'checkout:' + o.numero, activo: true }); localStorage.setItem('lv_marketing', JSON.stringify(lista)); }
+        }
+      } catch (e) {}
+      writePending(null); Cart.set([]);
+      $('#order-n').textContent = o.numero;
+      $('#wa-confirm').href = waLink('Hola Lovely, quiero saber el estado de mi pedido ' + o.numero + '.');
+      go(4);
+    });
+    $('#sent-edit').addEventListener('click', function () { writePending(null); go(2); });
+
+    /* Si vuelve de WhatsApp o recarga la página con un pedido pendiente, se le pregunta de nuevo */
+    var pend = readPending();
+    if (pend && Cart.items().length) { cliente = pend.cliente; if (pend.envio && $('input[name="envio"][value="' + pend.envio.metodo + '"]')) $('input[name="envio"][value="' + pend.envio.metodo + '"]').checked = true; showPending(pend); }
+    else { writePending(null); go(1); }
   }
 
   /* ---------- Ayuda ---------- */
